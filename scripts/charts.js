@@ -1290,10 +1290,19 @@ const updateInfoPanel = async () => {
         const ch2Value = await fetchTextValue('CH', 2);
         logOperacionalContainer.innerHTML = ''; // Clear existing content
         
+        // Determine if there's actual content
+        const hasContent = ch2Value && ch2Value.trim() !== '' && ch2Value !== '—';
+        const bgColor = hasContent 
+            ? 'rgba(82, 196, 26, 0.15)' // Slightly green when has values
+            : 'rgba(255, 255, 255, 0.08)'; // Default slight white
+        const borderColor = hasContent
+            ? 'rgba(82, 196, 26, 0.3)' // Green border when has values
+            : 'rgba(255, 255, 255, 0.15)'; // Default border
+        
         // Create 6 grid items (2 columns × 3 rows)
         for (let i = 0; i < 6; i++) {
             const gridItem = document.createElement('div');
-            gridItem.style.cssText = 'padding: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; overflow-wrap: break-word; overflow: hidden; white-space: normal; line-height: 1.2;';
+            gridItem.style.cssText = `padding: 6px; background: ${bgColor}; border-radius: 4px; border: 1px solid ${borderColor}; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; overflow-wrap: break-word; overflow: hidden; white-space: normal; line-height: 1.2;`;
             
             // If first item, display the CH2 value; others can display placeholder or additional data
             if (i === 0) {
@@ -1305,7 +1314,7 @@ const updateInfoPanel = async () => {
             logOperacionalContainer.appendChild(gridItem);
         }
         
-        console.log('📋 Log Operacional grid updated with CH2:', ch2Value);
+        console.log('📋 Log Operacional grid updated with CH2:', ch2Value, '| Has content:', hasContent);
     }
     
     console.log('Info panel updated with:', data);
