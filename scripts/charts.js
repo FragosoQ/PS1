@@ -417,7 +417,7 @@ const updateDestination = async () => {
 /**
  * Draws text content in a card (for non-chart data like priority)
  */
-const drawTextCard = (containerId, text) => {
+const drawTextCard = (containerId, text, fontSize = 'clamp(34px, 5vw, 58px)') => {
     const container = d3.select(containerId).select('.card-chart');
     container.html('');
 
@@ -435,7 +435,7 @@ const drawTextCard = (containerId, text) => {
         .style('box-sizing', 'border-box');
 
     div.append('span')
-        .style('font-size', 'clamp(34px, 5vw, 58px)')
+        .style('font-size', fontSize)
         .style('font-weight', 'bold')
         .style('color', 'white')
         .style('text-align', 'center')
@@ -718,7 +718,8 @@ const updateAllCharts = async () => {
             // Se é grid-item-7 (PRIORIDADE ATIVA), ler como texto
             if (chart.id === '#grid-item-7') {
                 const textValue = await fetchTextValue(chart.column, chart.fixedRow);
-                drawTextCard(chart.id, textValue);
+                // Increase font size for PRIORIDADE ATIVA by ~30px (min/max increased)
+                drawTextCard(chart.id, textValue, 'clamp(64px, 5vw, 88px)');
             } else {
                 // Caso contrário, ler como percentual numérico
                 const percentage = await fetchPercentage(chart.column, chart.fixedRow);
