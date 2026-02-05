@@ -435,7 +435,7 @@ const drawTextCard = (containerId, text) => {
         .style('box-sizing', 'border-box');
 
     div.append('span')
-        .style('font-size', 'clamp(24px, 5vw, 48px)')
+        .style('font-size', 'clamp(34px, 5vw, 58px)')
         .style('font-weight', 'bold')
         .style('color', 'white')
         .style('text-align', 'center')
@@ -571,7 +571,7 @@ const drawMultipleDonutCharts = (containerId, chartsData) => {
         // Grid 2x2: each chart gets a quarter of the space
         const chartWidth = (width / 2) - 15;
         const chartHeight = (height / 2) - 15;
-        size = Math.min(chartWidth, chartHeight, 150);  // Increased from 120 to 150
+        size = Math.min(chartWidth, chartHeight, 120);
     } else {
         // Linear layout for 1 or 2 charts
         const chartWidth = (width / chartsData.length) - 10;

@@ -220,14 +220,18 @@
     }
 
     /* --- NOVAS LINHAS: PRIORIDADE ATIVA --- */
-    #grid-item-1, #grid-item-2, #grid-item-3,
-    #grid-item-4, #grid-item-5, #grid-item-6 {
-      grid-column: span 2;
+    #grid-item-1, #grid-item-2,
+    #grid-item-4, #grid-item-5 {
+      grid-column: span 1;
       min-height: 160px;
     }
 
+    #grid-item-3, #grid-item-6 {
+      display: none;
+    }
+
     #grid-item-7 {
-      grid-column: span 2;
+      grid-column: span 1;
       min-height: 160px;
     }
 
@@ -250,17 +254,30 @@
     }
 
     #grid-item-9 .card-title {
-      font-size: clamp(48px, 8vw, 96px) !important;
+      font-size: clamp(108px, 8vw, 116px) !important;
       font-weight: bold;
       color: white;
       margin: 0 !important;
+    }
+
+    #grid-item-11 {
+      grid-column: span 1;
+      min-height: 160px;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    #grid-item-11 video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* --- BOTTOM SECTION --- */
     .bottom-section {
       grid-column: 1 / -1;
       display: grid;
-      grid-template-columns: 1.5fr 1fr 0.9fr 1fr;
+      grid-template-columns: 1.5fr 1fr 1fr 1.2fr 1fr;
       gap: 10px;
       min-height: 0;
       height: 18vh;
@@ -525,6 +542,12 @@
       <div class="card-title">4</div>
     </div>
     
+    <div class="grid-item" id="grid-item-11">
+      <video autoplay muted loop>
+        <source src="https://video.wixstatic.com/video/a6967f_ddd566c8c5624bdcaae9143599c892a5/720p/mp4/file.mp4" type="video/mp4">
+      </video>
+    </div>
+    
     <div class="grid-item" id="grid-item-7">
       <div class="card-title">PRIORIDADE ATIVA</div>
       <div class="card-chart"></div>
@@ -542,6 +565,9 @@
       <div class="grid-item info-panel-card-1">
         <div class="card-title"></div>
         <div class="info-panel-content-1"></div>
+      </div>
+      <div class="grid-item info-panel-card-5">
+        <div class="card-title"></div>
       </div>
       <div class="grid-item info-panel-card-3">
         <div class="card-title">GOAL</div>
