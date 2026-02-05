@@ -31,7 +31,7 @@
     .grid-container {
       width: clamp(600px, 50vw, 1000px);
       grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: 1fr 1fr auto auto auto auto;
+      grid-template-rows: 1fr 1fr auto auto auto;
     }
     
     /* Ajuste quando houver mais de 3 slots - reduz altura dos cards superiores */
@@ -221,8 +221,7 @@
 
     /* --- NOVAS LINHAS: PRIORIDADE ATIVA e PERCENTAGEM --- */
     #grid-item-7, #grid-item-8 {
-      grid-column: 1 / -1;
-      min-height: 180px;
+      min-height: 160px;
     }
 
     /* --- BOTTOM SECTION --- */
@@ -346,11 +345,6 @@
       #grid-item-4, #grid-item-5, #grid-item-6,
       #grid-item-7, #grid-item-8 {
         min-height: 160px; /* Aumentado para melhor visualização dos pie charts */
-      }
-      
-      /* Novas linhas ocupam 2 colunas no mobile também */
-      #grid-item-7, #grid-item-8 {
-        grid-column: 1 / -1;
       }
       
       /* --- CORREÇÃO DO LAYOUT MOBILE --- */
