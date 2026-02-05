@@ -194,94 +194,36 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
             .style('line-height', '1')
             .text(String(text).trim());
 
-    // Donut container
-    const donutContainer = main.append('div')
-        .style('width', '100%')
-        .style('height', '50%')
+    // Horizontal bar container
+    const barContainer = main.append('div')
+        .style('width', '90%')
+        .style('height', '40%')
         .style('display', 'flex')
+        .style('flex-direction', 'column')
         .style('align-items', 'center')
-        .style('justify-content', 'center');
+        .style('justify-content', 'center')
+        .style('gap', '8px');
 
-    const rect = donutContainer.node().getBoundingClientRect();
-    const width = Math.max(rect.width, 60);
-    const height = Math.max(rect.height, 60);
-    const size = Math.min(width, height, 120);
-    if (size <= 0) return;
+    // Background bar (empty)
+    barContainer.append('div')
+        .style('width', '100%')
+        .style('height', '12px')
+        .style('background-color', 'rgba(255, 255, 255, 0.15)')
+        .style('border-radius', '6px')
+        .style('overflow', 'hidden')
+        .style('position', 'relative')
+        .append('div')
+            .style('height', '100%')
+            .style('width', `${percentage}%`)
+            .style('background', `linear-gradient(90deg, ${d3.rgb(fillColor).brighter(0.8)}, ${fillColor})`)
+            .style('border-radius', '6px')
+            .style('transition', 'width 0.5s ease');
 
-    const radius = size / 2;
-    const innerRadius = radius * 0.65;
-
-    const arc = d3.arc()
-        .innerRadius(innerRadius)
-        .outerRadius(radius);
-
-    const pie = d3.pie()
-        .sort(null)
-        .value(d => d.value)
-        .startAngle(-Math.PI * 0.5)
-        .endAngle(Math.PI * 1.5);
-
-    const data = [
-        { value: percentage, name: 'Filled' },
-        { value: 100 - percentage, name: 'Empty' }
-    ];
-
-    const uniqueId = `chart-${Math.random().toString(36).substr(2, 9)}`;
-
-    const svg = donutContainer.append('svg')
-        .attr('width', size)
-        .attr('height', size)
-        .attr('viewBox', `0 0 ${size} ${size}`)
-        .style('display', 'block')
-        .append('g')
-        .attr('transform', `translate(${size / 2}, ${size / 2})`);
-
-    const defs = svg.append('defs');
-    const fillGradient = defs.append('radialGradient')
-        .attr('id', `fill-gradient-${uniqueId}`)
-        .attr('cx', '30%')
-        .attr('cy', '30%');
-
-    fillGradient.append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', d3.rgb(fillColor).brighter(0.8))
-        .attr('stop-opacity', 1);
-    fillGradient.append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', fillColor)
-        .attr('stop-opacity', 1);
-
-    const emptyGradient = defs.append('radialGradient')
-        .attr('id', `empty-gradient-${uniqueId}`)
-        .attr('cx', '30%')
-        .attr('cy', '30%');
-
-    emptyGradient.append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', 'rgba(255, 255, 255, 0.3)')
-        .attr('stop-opacity', 1);
-    emptyGradient.append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', 'rgba(255, 255, 255, 0.08)')
-        .attr('stop-opacity', 1);
-
-    const arcs = svg.selectAll('.arc')
-        .data(pie(data))
-        .enter()
-        .append('g')
-        .attr('class', 'arc');
-
-    arcs.append('path')
-        .attr('d', arc)
-        .attr('fill', (d, i) => i === 0 ? `url(#fill-gradient-${uniqueId})` : `url(#empty-gradient-${uniqueId})`)
-        .attr('stroke', 'none');
-
-    svg.append('text')
-        .attr('text-anchor', 'middle')
-        .attr('dy', '0.35em')
-        .style('font-size', '1.2rem')
+    // Percentage text
+    barContainer.append('span')
+        .style('font-size', 'clamp(12px, 1.5vw, 16px)')
         .style('font-weight', 'bold')
-        .style('fill', 'white')
+        .style('color', fillColor)
         .text(`${percentage.toFixed(0)}%`);
 };
 
