@@ -383,6 +383,38 @@ const updateDestination = async () => {
 /**
  * Draws a Donut Chart inside a container
  */
+/**
+ * Draws text content in a card (for non-chart data like priority)
+ */
+const drawTextCard = (containerId, text) => {
+    const container = d3.select(containerId).select('.card-chart');
+    container.html('');
+
+    const containerNode = container.node();
+    if (!containerNode) return;
+
+    // Create a div for text display
+    const div = container.append('div')
+        .style('display', 'flex')
+        .style('align-items', 'center')
+        .style('justify-content', 'center')
+        .style('width', '100%')
+        .style('height', '100%')
+        .style('padding', '20px')
+        .style('box-sizing', 'border-box');
+
+    div.append('span')
+        .style('font-size', 'clamp(24px, 5vw, 48px)')
+        .style('font-weight', 'bold')
+        .style('color', 'white')
+        .style('text-align', 'center')
+        .style('word-wrap', 'break-word')
+        .text(String(text).trim());
+};
+
+/**
+ * Draws a donut chart in a container
+ */
 const drawDonutChart = (containerId, percentage, fillColor) => {
     const container = d3.select(containerId).select('.card-chart');
     container.html('');
@@ -652,8 +684,15 @@ const updateAllCharts = async () => {
         
         // Se tem fixedRow definida, ler apenas dessa linha (para grid-item-7 e grid-item-8)
         if (chart.fixedRow !== null) {
-            const percentage = await fetchPercentage(chart.column, chart.fixedRow);
-            drawDonutChart(chart.id, percentage, chart.color);
+            const value = await fetchPercentage(chart.column, chart.fixedRow);
+            
+            // Se é grid-item-7 (PRIORIDADE ATIVA), mostrar como texto
+            if (chart.id === '#grid-item-7') {
+                drawTextCard(chart.id, value);
+            } else {
+                // Caso contrário, mostrar como gráfico percentual
+                drawDonutChart(chart.id, value, chart.color);
+            }
             continue;
         }
         
