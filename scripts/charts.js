@@ -293,6 +293,37 @@ const fetchPercentage = async (columnName, rowNumber) => {
 };
 
 /**
+ * Fetches a text value from Google Sheets (without numeric conversion)
+ */
+const fetchTextValue = async (columnName, rowNumber) => {
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=${columnName}${rowNumber}`;
+
+    try {
+        const response = await d3.text(SHEET_URL);
+        
+        let rawValue = response.split('\n')[1]?.trim(); 
+
+        if (!rawValue) {
+            rawValue = response.split('\n')[0]?.trim(); 
+        }
+
+        if (!rawValue) {
+            console.warn(`Empty data or unexpected format for column ${columnName}.`);
+            return '';
+        }
+
+        // Remove quotes and trim
+        rawValue = rawValue.replace(/"/g, '').trim(); 
+        console.log(`📝 Text value from ${columnName}${rowNumber}: "${rawValue}"`);
+        return rawValue;
+
+    } catch (error) {
+        console.error(`Error fetching text data from column ${columnName}:`, error);
+        return ''; 
+    }
+};
+
+/**
  * Fetches countries from PaísesSoldadura sheet (column "País")
  * Returns all non-empty values with slotNumber defaulting to 1.
  */
@@ -684,14 +715,14 @@ const updateAllCharts = async () => {
         
         // Se tem fixedRow definida, ler apenas dessa linha (para grid-item-7 e grid-item-8)
         if (chart.fixedRow !== null) {
-            const value = await fetchPercentage(chart.column, chart.fixedRow);
-            
-            // Se é grid-item-7 (PRIORIDADE ATIVA), mostrar como texto
+            // Se é grid-item-7 (PRIORIDADE ATIVA), ler como texto
             if (chart.id === '#grid-item-7') {
-                drawTextCard(chart.id, value);
+                const textValue = await fetchTextValue(chart.column, chart.fixedRow);
+                drawTextCard(chart.id, textValue);
             } else {
-                // Caso contrário, mostrar como gráfico percentual
-                drawDonutChart(chart.id, value, chart.color);
+                // Caso contrário, ler como percentual numérico
+                const percentage = await fetchPercentage(chart.column, chart.fixedRow);
+                drawDonutChart(chart.id, percentage, chart.color);
             }
             continue;
         }
