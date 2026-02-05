@@ -170,6 +170,8 @@ const chartConfig = {
         chart4: '#00a2e8',
         chart5: '#5bc0de',
         chart6: '#3a94ff',
+        chart7: '#6c757d',  // Cinza - Nova linha 1
+        chart8: '#495057',  // Cinza escuro - Nova linha 2
         // Cores para múltiplos slots
         slotColors: [
             '#4b8cf2', // Azul - Slot_1_Em Curso
@@ -193,7 +195,9 @@ const chartConfig = {
         chart3: null, // TESTES - não existe
         chart4: 'P',  // ENVOLVENTES
         chart5: 'N',  // ESTRUTURA
-        chart6: null  // ÁREA TÉCNICA - não existe
+        chart6: null, // ÁREA TÉCNICA - não existe
+        chart7: null, // Nova linha 1 - não configurada
+        chart8: null  // Nova linha 2 - não configurada
     }
 };
 
@@ -630,7 +634,9 @@ const updateAllCharts = async () => {
         { id: '#grid-item-3', column: chartConfig.columns.chart3, color: chartConfig.colors.chart3 },
         { id: '#grid-item-4', column: chartConfig.columns.chart4, color: chartConfig.colors.chart4 },
         { id: '#grid-item-5', column: chartConfig.columns.chart5, color: chartConfig.colors.chart5 },
-        { id: '#grid-item-6', column: chartConfig.columns.chart6, color: chartConfig.colors.chart6 }
+        { id: '#grid-item-6', column: chartConfig.columns.chart6, color: chartConfig.colors.chart6 },
+        { id: '#grid-item-7', column: chartConfig.columns.chart7, color: chartConfig.colors.chart7 },
+        { id: '#grid-item-8', column: chartConfig.columns.chart8, color: chartConfig.colors.chart8 }
     ];
 
     // Fetch all slots (Slot_1_Em Curso, Slot_2_Em Curso)
