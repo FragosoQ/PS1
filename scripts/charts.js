@@ -571,7 +571,7 @@ const drawMultipleDonutCharts = (containerId, chartsData) => {
         // Grid 2x2: each chart gets a quarter of the space
         const chartWidth = (width / 2) - 15;
         const chartHeight = (height / 2) - 15;
-        size = Math.min(chartWidth, chartHeight, 120);
+        size = Math.min(chartWidth, chartHeight, 150);  // Increased from 120 to 150
     } else {
         // Linear layout for 1 or 2 charts
         const chartWidth = (width / chartsData.length) - 10;
