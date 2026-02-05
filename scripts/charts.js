@@ -1283,12 +1283,28 @@ const updateInfoPanel = async () => {
     const goalData = await fetchGoalData();
     updateGoalChart(goalData.diasPrazo, goalData.diasUsados, goalData.folga);
     
-    // Update Log Operacional card (info-panel-card-5) with CH2 content
+    // Update Log Operacional card (info-panel-card-5) with CH2 content in grid layout
     const logOperacionalContainer = document.querySelector('.info-panel-content-5');
     if (logOperacionalContainer) {
         const ch2Value = await fetchTextValue('CH', 2);
-        logOperacionalContainer.textContent = ch2Value || '—';
-        console.log('📋 Log Operacional updated with CH2:', ch2Value);
+        logOperacionalContainer.innerHTML = ''; // Clear existing content
+        
+        // Create 6 grid items (2 columns × 3 rows)
+        for (let i = 0; i < 6; i++) {
+            const gridItem = document.createElement('div');
+            gridItem.style.cssText = 'padding: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; overflow-wrap: break-word;';
+            
+            // If first item, display the CH2 value; others can display placeholder or additional data
+            if (i === 0) {
+                gridItem.textContent = ch2Value || '—';
+            } else {
+                gridItem.textContent = '—'; // Placeholder for additional data
+            }
+            
+            logOperacionalContainer.appendChild(gridItem);
+        }
+        
+        console.log('📋 Log Operacional grid updated with CH2:', ch2Value);
     }
     
     console.log('Info panel updated with:', data);
