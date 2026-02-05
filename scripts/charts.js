@@ -1283,6 +1283,14 @@ const updateInfoPanel = async () => {
     const goalData = await fetchGoalData();
     updateGoalChart(goalData.diasPrazo, goalData.diasUsados, goalData.folga);
     
+    // Update Log Operacional card (info-panel-card-5) with CH2 content
+    const logOperacionalContainer = document.querySelector('.info-panel-content-5');
+    if (logOperacionalContainer) {
+        const ch2Value = await fetchTextValue('CH', 2);
+        logOperacionalContainer.textContent = ch2Value || '—';
+        console.log('📋 Log Operacional updated with CH2:', ch2Value);
+    }
+    
     console.log('Info panel updated with:', data);
 };
 
