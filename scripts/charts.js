@@ -1293,7 +1293,7 @@ const updateInfoPanel = async () => {
         // Create 6 grid items (2 columns × 3 rows)
         for (let i = 0; i < 6; i++) {
             const gridItem = document.createElement('div');
-            gridItem.style.cssText = 'padding: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; overflow-wrap: break-word;';
+            gridItem.style.cssText = 'padding: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; overflow-wrap: break-word; overflow: hidden; white-space: normal; line-height: 1.2;';
             
             // If first item, display the CH2 value; others can display placeholder or additional data
             if (i === 0) {
