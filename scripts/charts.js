@@ -629,14 +629,14 @@ const drawMultipleDonutCharts = (containerId, chartsData) => {
  */
 const updateAllCharts = async () => {
     const charts = [
-        { id: '#grid-item-1', column: chartConfig.columns.chart1, color: chartConfig.colors.chart1 },
-        { id: '#grid-item-2', column: chartConfig.columns.chart2, color: chartConfig.colors.chart2 },
-        { id: '#grid-item-3', column: chartConfig.columns.chart3, color: chartConfig.colors.chart3 },
-        { id: '#grid-item-4', column: chartConfig.columns.chart4, color: chartConfig.colors.chart4 },
-        { id: '#grid-item-5', column: chartConfig.columns.chart5, color: chartConfig.colors.chart5 },
-        { id: '#grid-item-6', column: chartConfig.columns.chart6, color: chartConfig.colors.chart6 },
-        { id: '#grid-item-7', column: chartConfig.columns.chart7, color: chartConfig.colors.chart7 },
-        { id: '#grid-item-8', column: chartConfig.columns.chart8, color: chartConfig.colors.chart8 }
+        { id: '#grid-item-1', column: chartConfig.columns.chart1, color: chartConfig.colors.chart1, fixedRow: null },
+        { id: '#grid-item-2', column: chartConfig.columns.chart2, color: chartConfig.colors.chart2, fixedRow: null },
+        { id: '#grid-item-3', column: chartConfig.columns.chart3, color: chartConfig.colors.chart3, fixedRow: null },
+        { id: '#grid-item-4', column: chartConfig.columns.chart4, color: chartConfig.colors.chart4, fixedRow: null },
+        { id: '#grid-item-5', column: chartConfig.columns.chart5, color: chartConfig.colors.chart5, fixedRow: null },
+        { id: '#grid-item-6', column: chartConfig.columns.chart6, color: chartConfig.colors.chart6, fixedRow: null },
+        { id: '#grid-item-7', column: chartConfig.columns.chart7, color: chartConfig.colors.chart7, fixedRow: 2 },  // PRIORIDADE ATIVA - sempre linha 2
+        { id: '#grid-item-8', column: chartConfig.columns.chart8, color: chartConfig.colors.chart8, fixedRow: 2 }   // PERCENTAGEM - sempre linha 2
     ];
 
     // Fetch all slots (Slot_1_Em Curso, Slot_2_Em Curso)
@@ -647,6 +647,13 @@ const updateAllCharts = async () => {
         if (chart.column === null) {
             // Hide the chart container
             d3.select(chart.id).style('display', 'none');
+            continue;
+        }
+        
+        // Se tem fixedRow definida, ler apenas dessa linha (para grid-item-7 e grid-item-8)
+        if (chart.fixedRow !== null) {
+            const percentage = await fetchPercentage(chart.column, chart.fixedRow);
+            drawDonutChart(chart.id, percentage, chart.color);
             continue;
         }
         
