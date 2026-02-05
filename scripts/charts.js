@@ -170,8 +170,8 @@ const chartConfig = {
         chart4: '#00a2e8',
         chart5: '#5bc0de',
         chart6: '#3a94ff',
-        chart7: '#6c757d',  // Cinza - Nova linha 1
-        chart8: '#495057',  // Cinza escuro - Nova linha 2
+        chart7: '#FF6B6B',  // Vermelho - PRIORIDADE ATIVA
+        chart8: '#52C41A',  // Verde - PERCENTAGEM
         // Cores para múltiplos slots
         slotColors: [
             '#4b8cf2', // Azul - Slot_1_Em Curso
@@ -196,8 +196,8 @@ const chartConfig = {
         chart4: 'P',  // ENVOLVENTES
         chart5: 'N',  // ESTRUTURA
         chart6: null, // ÁREA TÉCNICA - não existe
-        chart7: null, // Nova linha 1 - não configurada
-        chart8: null  // Nova linha 2 - não configurada
+        chart7: 'CF', // PRIORIDADE ATIVA
+        chart8: 'CG'  // PERCENTAGEM
     }
 };
 
