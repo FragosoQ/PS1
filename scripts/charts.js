@@ -160,6 +160,130 @@ const mapCountryToEnglish = (countryNamePT) => {
     const normalized = countryNamePT.trim().toUpperCase();
     return ptToEn[normalized] || countryNamePT.toUpperCase();
 };
+/**
+ * Draws a text value and a small donut chart stacked in the same card
+ */
+const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(34px, 5vw, 58px)', fillColor = '#52C41A') => {
+    const container = d3.select(containerId).select('.card-chart');
+    container.html('');
+
+    const containerNode = container.node();
+    if (!containerNode) return;
+
+    // Main wrapper: column layout
+    const main = container.append('div')
+        .style('display', 'flex')
+        .style('flex-direction', 'column')
+        .style('align-items', 'center')
+        .style('justify-content', 'center')
+        .style('width', '100%')
+        .style('height', '100%')
+        .style('box-sizing', 'border-box')
+        .style('gap', '6px')
+        .style('padding', '8px');
+
+    // Text area
+    main.append('div')
+        .style('width', '100%')
+        .style('text-align', 'center')
+        .append('span')
+            .style('font-size', textFontSize)
+            .style('font-weight', 'bold')
+            .style('color', 'white')
+            .style('display', 'inline-block')
+            .style('line-height', '1')
+            .text(String(text).trim());
+
+    // Donut container
+    const donutContainer = main.append('div')
+        .style('width', '100%')
+        .style('height', '50%')
+        .style('display', 'flex')
+        .style('align-items', 'center')
+        .style('justify-content', 'center');
+
+    const rect = donutContainer.node().getBoundingClientRect();
+    const width = Math.max(rect.width, 60);
+    const height = Math.max(rect.height, 60);
+    const size = Math.min(width, height, 120);
+    if (size <= 0) return;
+
+    const radius = size / 2;
+    const innerRadius = radius * 0.65;
+
+    const arc = d3.arc()
+        .innerRadius(innerRadius)
+        .outerRadius(radius);
+
+    const pie = d3.pie()
+        .sort(null)
+        .value(d => d.value)
+        .startAngle(-Math.PI * 0.5)
+        .endAngle(Math.PI * 1.5);
+
+    const data = [
+        { value: percentage, name: 'Filled' },
+        { value: 100 - percentage, name: 'Empty' }
+    ];
+
+    const uniqueId = `chart-${Math.random().toString(36).substr(2, 9)}`;
+
+    const svg = donutContainer.append('svg')
+        .attr('width', size)
+        .attr('height', size)
+        .attr('viewBox', `0 0 ${size} ${size}`)
+        .style('display', 'block')
+        .append('g')
+        .attr('transform', `translate(${size / 2}, ${size / 2})`);
+
+    const defs = svg.append('defs');
+    const fillGradient = defs.append('radialGradient')
+        .attr('id', `fill-gradient-${uniqueId}`)
+        .attr('cx', '30%')
+        .attr('cy', '30%');
+
+    fillGradient.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', d3.rgb(fillColor).brighter(0.8))
+        .attr('stop-opacity', 1);
+    fillGradient.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', fillColor)
+        .attr('stop-opacity', 1);
+
+    const emptyGradient = defs.append('radialGradient')
+        .attr('id', `empty-gradient-${uniqueId}`)
+        .attr('cx', '30%')
+        .attr('cy', '30%');
+
+    emptyGradient.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', 'rgba(255, 255, 255, 0.3)')
+        .attr('stop-opacity', 1);
+    emptyGradient.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', 'rgba(255, 255, 255, 0.08)')
+        .attr('stop-opacity', 1);
+
+    const arcs = svg.selectAll('.arc')
+        .data(pie(data))
+        .enter()
+        .append('g')
+        .attr('class', 'arc');
+
+    arcs.append('path')
+        .attr('d', arc)
+        .attr('fill', (d, i) => i === 0 ? `url(#fill-gradient-${uniqueId})` : `url(#empty-gradient-${uniqueId})`)
+        .attr('stroke', 'none');
+
+    svg.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .style('font-size', '1.2rem')
+        .style('font-weight', 'bold')
+        .style('fill', 'white')
+        .text(`${percentage.toFixed(0)}%`);
+};
 
 // Configuration for charts
 const chartConfig = {
@@ -417,7 +541,7 @@ const updateDestination = async () => {
 /**
  * Draws text content in a card (for non-chart data like priority)
  */
-const drawTextCard = (containerId, text, fontSize = 'clamp(34px, 5vw, 58px)') => {
+const drawTextCard = (containerId, text, fontSize = 'clamp(46px, 8vw, 64px)') => {
     const container = d3.select(containerId).select('.card-chart');
     container.html('');
 
@@ -718,8 +842,11 @@ const updateAllCharts = async () => {
             // Se é grid-item-7 (PRIORIDADE ATIVA), ler como texto
             if (chart.id === '#grid-item-7') {
                 const textValue = await fetchTextValue(chart.column, chart.fixedRow);
-                // Increase font size for PRIORIDADE ATIVA by ~30px (min/max increased)
-                drawTextCard(chart.id, textValue, 'clamp(64px, 5vw, 88px)');
+                // Also fetch percentage from chart8 (PERCENTAGEM) for the same fixed row
+                const pctColumn = chartConfig.columns.chart8;
+                const percentage = pctColumn ? await fetchPercentage(pctColumn, chart.fixedRow) : 0;
+                // Render combined text + donut in the same card
+                drawTextWithDonut(chart.id, textValue, percentage, 'clamp(94px, 5vw, 118px)', chartConfig.colors.chart8);
             } else {
                 // Caso contrário, ler como percentual numérico
                 const percentage = await fetchPercentage(chart.column, chart.fixedRow);
