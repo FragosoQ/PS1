@@ -188,11 +188,11 @@ const chartConfig = {
     destinationSheetName: 'PaísesSoldadura',
     posto: 1, // Posto number (line to read: posto 1 = line 2, posto 2 = line 3, etc.)
     columns: {
-        chart1: 'AA', // CUBA
-        chart2: 'AC', // INTERIOR
+        chart1: 'M',  // CUBA
+        chart2: 'O',  // INTERIOR
         chart3: null, // TESTES - não existe
-        chart4: 'AD', // ENVOLVENTES
-        chart5: 'AB', // ESTRUTURA
+        chart4: 'P',  // ENVOLVENTES
+        chart5: 'N',  // ESTRUTURA
         chart6: null  // ÁREA TÉCNICA - não existe
     }
 };
@@ -682,7 +682,7 @@ const initCharts = () => {
 };
 
 /**
- * Updates EVO progress bar (Column L: GERAL from PSMulti sheet for active slots)
+ * Updates EVO progress bar (Column AI: GERAL from PS4 sheet for active slots)
  * Creates dynamic progress bars based on number of active slots
  */
 const updateEvoProgress = async () => {
@@ -713,7 +713,7 @@ const updateEvoProgress = async () => {
         // Create progress bar for each slot
         for (let i = 0; i < slots.length; i++) {
             const slot = slots[i];
-            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=L${slot.rowIndex}`;
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=AI${slot.rowIndex}`;
             
             try {
                 const response = await d3.text(SHEET_URL);
@@ -745,7 +745,7 @@ const updateEvoProgress = async () => {
                         wrapper.appendChild(fillDiv);
                         progressContainer.appendChild(wrapper);
                         
-                        console.log(`✅ Progress bar ${i + 1} updated: ${clampedPercentage}% (Chave: ${slot.chave}, Lote: ${slot.loteId})`);
+                        console.log(`✅ Progress bar ${i + 1} updated: ${clampedPercentage}% (Column AI - GERAL, Chave: ${slot.chave}, Lote: ${slot.loteId})`);
                     }
                 }
             } catch (error) {
@@ -754,7 +754,7 @@ const updateEvoProgress = async () => {
         }
         
     } catch (error) {
-        console.error('Error fetching progress from PSMulti GERAL:', error);
+        console.error('Error fetching progress from PS4 GERAL (column AI):', error);
     }
 };
 
