@@ -548,6 +548,41 @@ const fetchColumnValuesWithRowIndex = async (columnName) => {
     }
 };
 
+const fetchRangeValuesWithRowIndex = async (startColumn, endColumn) => {
+    const startIndex = columnLetterToIndex(startColumn);
+    const endIndex = columnLetterToIndex(endColumn);
+
+    if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) {
+        console.warn(`Invalid column range: ${startColumn}:${endColumn}`);
+        return [];
+    }
+
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:json&sheet=${chartConfig.sheetName}`;
+
+    try {
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
+        const jsonString = text.substring(47, text.length - 2);
+        const json = JSON.parse(jsonString);
+
+        const rows = json.table.rows || [];
+        return rows.map((row, index) => {
+            const values = [];
+            for (let col = startIndex; col <= endIndex; col++) {
+                const cell = row.c && row.c[col] ? row.c[col].v : '';
+                values.push(cell === null || cell === undefined ? '' : String(cell).trim());
+            }
+            return {
+                rowIndex: index + 2,
+                values
+            };
+        });
+    } catch (error) {
+        console.error(`Error fetching range data from ${startColumn}:${endColumn}:`, error);
+        return [];
+    }
+};
+
 /**
  * Fetches countries from PaísesSoldadura sheet (column "País")
  * Returns all non-empty values with slotNumber defaulting to 1.
@@ -1487,17 +1522,23 @@ const updateInfoPanel = async () => {
     const goalData = await fetchGoalData();
     updateGoalChart(goalData.diasPrazo, goalData.diasPrazoExtra, goalData.diasUsados, goalData.folga);
     
-    // Update Log Operacional card (info-panel-card-5) with CI values where AK == 100%
+    // Update Log Operacional card (info-panel-card-5) with values left of 100% in AL:CE
     const logOperacionalContainer = document.querySelector('.info-panel-content-5');
     if (logOperacionalContainer) {
-        const ciRows = await fetchColumnValuesWithRowIndex('CI');
-        const akRows = await fetchColumnValuesWithRowIndex('AK');
-        const akByRow = new Map(akRows.map(item => [item.rowIndex, item.value]));
+        const rangeRows = await fetchRangeValuesWithRowIndex('AL', 'CE');
+        const logValues = [];
 
-        const logValues = ciRows
-            .filter(item => String(item.value || '').trim() !== '')
-            .filter(item => parsePercentageValue(akByRow.get(item.rowIndex)) === 100)
-            .map(item => item.value);
+        rangeRows.forEach(row => {
+            for (let i = 1; i < row.values.length; i++) {
+                const percentage = parsePercentageValue(row.values[i]);
+                if (percentage === 100) {
+                    const leftValue = row.values[i - 1];
+                    if (leftValue && String(leftValue).trim() !== '') {
+                        logValues.push(String(leftValue).trim());
+                    }
+                }
+            }
+        });
         logOperacionalContainer.innerHTML = ''; // Clear existing content
         
         // Determine if there's actual content

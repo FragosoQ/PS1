@@ -585,6 +585,43 @@
       </video>
     </div>
 
+    <script>
+      (function () {
+        const video = document.getElementById('grid-video');
+        if (!video) return;
+
+        const sources = [
+          'https://video.wixstatic.com/video/a6967f_1729e31da8fa46b7994d19a82849b401/720p/mp4/file.mp4',
+          'https://video.wixstatic.com/video/a6967f_2865b492f9de41f1831de9488a94124e/720p/mp4/file.mp4'
+        ];
+
+        const SWITCH_INTERVAL_MS = 45000;
+        let currentIndex = 0;
+
+        const sourceEl = video.querySelector('source') || document.createElement('source');
+        if (!sourceEl.parentNode) {
+          sourceEl.type = 'video/mp4';
+          video.appendChild(sourceEl);
+        }
+
+        const setSource = (index) => {
+          currentIndex = index % sources.length;
+          video.loop = false;
+          sourceEl.src = sources[currentIndex];
+          video.load();
+          const playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {});
+          }
+        };
+
+        setSource(0);
+        setInterval(() => {
+          setSource(currentIndex + 1);
+        }, SWITCH_INTERVAL_MS);
+      })();
+    </script>
+
 
 
     
