@@ -1,7 +1,35 @@
 // Configuração do Google Sheets
 const SHEET_ID = '1GQUB52a2gKR429bjqJrNkbP5rjR7Z_4v85z9M7_Cr8Y';
-// Agora usamos a folha PS4 como origem principal (contém 'Chave de Procura' e 'País 1..País 5')
-const SHEET_NAME = 'PS4';
+// Usando a folha PS1 como origem principal (contém 'Chave de Procura', dados completos de produção e 'País 1..País 3')
+const SHEET_NAME = 'PS1';
+
+/**
+ * MIGRAÇÃO DE PS4 PARA PS1
+ * 
+ * Alterado em: Fevereiro 2026
+ * A origem de dados foi alterada de PS4 para PS1
+ * 
+ * Novas colunas disponíveis em PS1:
+ * - Chave de Procura (identificador)
+ * - LOTE, QUANTIDADE / LOTE
+ * - DATA PRETENDIDA, DATA LASER
+ * - INÍCIO/FIM SERRALHARIA
+ * - INÍCIO/FIM SOLDADURA / ACABAMENTO
+ * - P1(h) a P5(h) (tempos por estação)
+ * - País 1, País 2, País 3 (para globo 3D)
+ * - STATUS (estado da encomenda)
+ * - Operador (responsável)
+ * - GERAL(T), GERAL(R) (tempos gerais)
+ * - Percentagens de conclusão (P1% a P13_3%, V%, FE%, ESP%)
+ * 
+ * O sistema continua a extrair automaticamente:
+ * - Países de destino (País 1, 2, 3)
+ * - Coordenadas geográficas
+ * - Conexões Portugal → Destinos
+ * 
+ * Para adicionar novas funcionalidades com as colunas extras, 
+ * modifique a função convertSheetDataToAppFormat()
+ */
 
 /**
  * Carrega dados do Google Sheets
@@ -343,7 +371,7 @@ function findCountryCoordinates(countryName, database) {
  * @returns {Promise<Object>} Dados formatados com countries e connections
  */
 async function convertSheetDataToAppFormat(sheetData) {
-  console.log('🔄 Convertendo dados do Google Sheets para formato da aplicação (PS4)...');
+  console.log('🔄 Convertendo dados do Google Sheets para formato da aplicação (PS1)...');
 
   // Carrega banco de dados de países
   const countriesDB = await loadCountriesDatabase();
@@ -353,9 +381,9 @@ async function convertSheetDataToAppFormat(sheetData) {
   const columnNames = Object.keys(sampleRow);
 
   // Encontra a coluna "Chave de Procura"
-  const chaveCol = columnNames.find(col => /^chave\s*de\s*procura$/i.test((col || '').toString().trim()));
+  const chaveCol = columnNames.find(col => /^chave\s*de\s*procura$/i.test((col || '').toString().trim())) || 'Chave de Procura';
 
-  console.log('🗺️ Colunas detectadas no PS4:', columnNames.slice(0, 10), '...');
+  console.log('🗺️ Colunas detectadas no PS1:', columnNames.slice(0, 10), '...');
   console.log(`   - Chave de Procura: "${chaveCol}" (índice: ${columnNames.indexOf(chaveCol)})`);
 
   // SEMPRE busca países do PaísesSoldadura (coluna "País")

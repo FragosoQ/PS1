@@ -9,10 +9,30 @@ https://docs.google.com/spreadsheets/d/1GQUB52a2gKR429bjqJrNkbP5rjR7Z_4v85z9M7_C
 
 A planilha PS1 contém dados de encomendas/produção com as seguintes colunas relevantes:
 
-### Colunas Utilizadas:
+### Colunas de Destino (Globo 3D):
 - **País 1**: Primeiro país associado à encomenda
 - **País 2**: Segundo país (opcional)
 - **País 3**: Terceiro país (opcional)
+
+### Colunas de Identificação:
+- **Chave de Procura**: Identificador único da encomenda/lote
+- **LOTE**: Número do lote de produção
+- **QUANTIDADE / LOTE**: Quantidade de itens no lote
+
+### Colunas de Datas (Timelines de Produção):
+- **DATA PRETENDIDA**: Data de entrega esperada
+- **DATA LASER**: Data de processamento laser
+- **INÍCIO SERRALHARIA** / **FIM SERRALHARIA**: Período de serralharia
+- **INÍCIO SOLDADURA / ACABAMENTO** / **FIM SOLDADURA / ACABAMENTO**: Período de soldadura
+
+### Colunas de Tempos de Processamento:
+- **P1 (h), P2 (h), P3 (h), P4 (h), P5 (h)**: Horas de processamento por estação
+
+### Colunas de Status e Responsabilidade:
+- **STATUS**: Estado da encomenda (Em Produção, Finalizado, etc.)
+- **Operador**: Responsável pela encomenda
+- **GERAL(T)**: Tempo geral de produção (base/target)
+- **GERAL(R)**: Tempo geral de produção (realizado)
 
 ### Como Funciona:
 

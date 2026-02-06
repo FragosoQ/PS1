@@ -7,6 +7,7 @@
   <title>SOMENGIL</title>
   
   <link rel="stylesheet" href="styles/index.css">
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.5.1/uicons-thin-rounded/css/uicons-thin-rounded.css">
 
   <style>
     /* --- CSS GERAL --- */
@@ -544,21 +545,44 @@
     </div>
     
     <div class="grid-item" id="grid-item-9">
-      <div class="card-title">4</div>
+      <div class="card-title">1</div>
     </div>
     
     <!--<div class="grid-item" id="grid-item-11">
       <video autoplay muted loop>
         <source src="https://video.wixstatic.com/video/a6967f_1c7ca8a829d0402cb39b4eed24cf4b1f/720p/mp4/file.mp4" type="video/mp4">
-      </video>
+      </video>https://static.wixstatic.com/media/a6967f_65315a0ac33347c393c0ac33b6846aaf~mv2.png
+      https://video.wixstatic.com/video/a6967f_1c7ca8a829d0402cb39b4eed24cf4b1f/720p/mp4/file.mp4"
     </div>-->
 
-    <div id="grid-item-11" style="border-radius:16px; overflow:hidden;">
+    <!--<div id="grid-item-11" style="border-radius:16px; overflow:hidden;">
+      <img src="https://static.wixstatic.com/media/a6967f_95adc546d37c48439468dc428cc46bf3~mv2.png" 
+          alt="Descrição da imagem"
+          style="width:100%; height:100%; object-fit:cover; display:block;">
+    </div>-->
+
+       <!--<div class="grid-item" id="grid-item-11">
+      <video autoplay muted loop>
+        <source src="https://video.wixstatic.com/video/a6967f_1729e31da8fa46b7994d19a82849b401/720p/mp4/file.mp4" type="video/mp4">
+      </video>
+    </div>-->
+    
+
+
+    <!--<div id="grid-item-11" style="border-radius:16px; overflow:hidden;">
       <video autoplay muted loop playsinline
             style="width:100%; height:100%; object-fit:cover; display:block;">
         <source src="https://video.wixstatic.com/video/a6967f_1c7ca8a829d0402cb39b4eed24cf4b1f/720p/mp4/file.mp4" type="video/mp4">
       </video>
+    </div>-->
+
+    <div id="grid-item-11" style="border-radius:16px; overflow:hidden;">
+      <video id="grid-video" autoplay muted playsinline
+            style="width:100%; height:100%; object-fit:cover; display:block;">
+        <source src="https://video.wixstatic.com/video/a6967f_1729e31da8fa46b7994d19a82849b401/720p/mp4/file.mp4" type="video/mp4">
+      </video>
     </div>
+
 
 
     
@@ -663,6 +687,22 @@
   
   <!-- Network Status Monitor -->
   <script src="scripts/network-status.js?v=20251125"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const gridVideo = document.getElementById('grid-video');
+      if (!gridVideo) {
+        return;
+      }
+
+      setInterval(() => {
+        if (gridVideo.readyState >= 1) {
+          gridVideo.currentTime = 0;
+          gridVideo.play().catch(() => {});
+        }
+      }, 45000);
+    });
+  </script>
 
 </body>
 </html>

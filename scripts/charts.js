@@ -163,7 +163,7 @@ const mapCountryToEnglish = (countryNamePT) => {
 /**
  * Draws a text value and a small donut chart stacked in the same card
  */
-const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(34px, 5vw, 58px)', fillColor = '#52C41A') => {
+const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(34px, 5vw, 58px)', fillColor = '#52C41A', cornerText = '') => {
     const container = d3.select(containerId).select('.card-chart');
     container.html('');
 
@@ -180,7 +180,29 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
         .style('height', '100%')
         .style('box-sizing', 'border-box')
         .style('gap', '6px')
-        .style('padding', '8px');
+        .style('padding', '8px')
+        .style('position', 'relative');
+
+    if (cornerText && String(cornerText).trim() !== '') {
+        main.append('div')
+            .style('position', 'absolute')
+            .style('top', '6px')
+            .style('right', '8px')
+            .style('font-size', 'clamp(22px, 1.4vw, 24px)')
+            .style('font-weight', '700')
+            .style('color', 'rgba(255, 255, 255, 0.95)')
+            .style('background', 'linear-gradient(135deg, rgba(81, 184, 234, 1) 0%, rgba(0, 0, 0, 1) 100%)')
+            .style('padding', '4px 6px')
+            .style('border-radius', '6px')
+            .style('text-transform', 'uppercase')
+            .style('letter-spacing', '0.04em')
+            .style('text-align', 'right')
+            .style('max-width', '55%')
+            .style('overflow', 'hidden')
+            .style('text-overflow', 'ellipsis')
+            .style('white-space', 'nowrap')
+            .html(`<span class="fi fi-tr-angle-double-right" aria-hidden="true" style="margin-right:6px; font-size:0.9em;"></span>${String(cornerText).trim()}`);
+    }
 
     // Text area
     main.append('div')
@@ -191,7 +213,10 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
             .style('font-weight', 'bold')
             .style('color', 'white')
             .style('display', 'inline-block')
-            .style('line-height', '1')
+            .style('line-height', '1.1')
+            .style('white-space', 'normal')
+            .style('word-break', 'break-word')
+            .style('max-width', '100%')
             .text(String(text).trim());
 
     // Horizontal bar container
@@ -251,18 +276,18 @@ const chartConfig = {
         ]
     },
     spreadsheetId: '1GQUB52a2gKR429bjqJrNkbP5rjR7Z_4v85z9M7_Cr8Y',
-    sheetName: 'PS4',
+    sheetName: 'PS1',
     // Destination countries come from a separate sheet (PaísesSoldadura, column "País")
     destinationSheetName: 'PaísesSoldadura',
     posto: 1, // Posto number (line to read: posto 1 = line 2, posto 2 = line 3, etc.)
     columns: {
-        chart1: 'M',  // CUBA
-        chart2: 'O',  // INTERIOR
+        chart1: 'O',  // CUBA
+        chart2: 'Q',  // INTERIOR
         chart3: null, // TESTES - não existe
-        chart4: 'P',  // ENVOLVENTES
-        chart5: 'N',  // ESTRUTURA
+        chart4: 'R',  // ENVOLVENTES
+        chart5: 'P',  // ESTRUTURA
         chart6: null, // ÁREA TÉCNICA - não existe
-        chart7: 'CF', // PRIORIDADE ATIVA
+        chart7: 'CI', // PRIORIDADE ATIVA (Posto 1)
         chart8: 'CG'  // PERCENTAGEM
     }
 };
@@ -386,6 +411,138 @@ const fetchTextValue = async (columnName, rowNumber) => {
     } catch (error) {
         console.error(`Error fetching text data from column ${columnName}:`, error);
         return ''; 
+    }
+};
+
+const columnLetterToIndex = (columnName) => {
+    let index = 0;
+    const normalized = String(columnName || '').toUpperCase().trim();
+
+    for (let i = 0; i < normalized.length; i++) {
+        const code = normalized.charCodeAt(i);
+        if (code < 65 || code > 90) {
+            return -1;
+        }
+        index = (index * 26) + (code - 64);
+    }
+
+    return index - 1;
+};
+
+const parsePercentageValue = (rawValue) => {
+    if (rawValue === null || rawValue === undefined) {
+        return null;
+    }
+
+    const normalized = String(rawValue)
+        .replace(/"/g, '')
+        .replace('%', '')
+        .replace(',', '.')
+        .trim();
+
+    if (normalized === '') {
+        return null;
+    }
+
+    const numericMatch = normalized.match(/^-?\d+(\.\d+)?/);
+    if (!numericMatch) {
+        return null;
+    }
+
+    const value = parseFloat(numericMatch[0]);
+    return Number.isNaN(value) ? null : value;
+};
+
+const parseSheetDate = (rawValue) => {
+    if (rawValue === null || rawValue === undefined) {
+        return null;
+    }
+
+    if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+        const base = Date.UTC(1899, 11, 30);
+        return new Date(base + rawValue * 86400000);
+    }
+
+    const normalized = String(rawValue).replace(/"/g, '').trim();
+    if (normalized === '') {
+        return null;
+    }
+
+    const parsed = Date.parse(normalized);
+    if (!Number.isNaN(parsed)) {
+        return new Date(parsed);
+    }
+
+    const parts = normalized.split(/[\/\-]/).map(part => part.trim());
+    if (parts.length === 3) {
+        let day = parseInt(parts[0], 10);
+        let month = parseInt(parts[1], 10);
+        let year = parseInt(parts[2], 10);
+
+        if (month > 12 && day <= 12) {
+            const swap = day;
+            day = month;
+            month = swap;
+        }
+
+        if (year < 100) {
+            year += 2000;
+        }
+
+        if (!Number.isNaN(day) && !Number.isNaN(month) && !Number.isNaN(year)) {
+            return new Date(Date.UTC(year, month - 1, day));
+        }
+    }
+
+    return null;
+};
+
+const diffDays = (startDate, endDate) => {
+    if (!startDate || !endDate) {
+        return null;
+    }
+
+    const start = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+    const end = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+    const value = Math.round((end - start) / 86400000);
+    return Number.isNaN(value) ? null : value;
+};
+
+const addDaysUtc = (dateValue, daysToAdd) => {
+    if (!dateValue || !Number.isFinite(daysToAdd)) {
+        return null;
+    }
+
+    return new Date(dateValue.getTime() + (daysToAdd * 86400000));
+};
+
+const fetchColumnValuesWithRowIndex = async (columnName) => {
+    const columnIndex = columnLetterToIndex(columnName);
+    if (columnIndex < 0) {
+        console.warn(`Invalid column name: ${columnName}`);
+        return [];
+    }
+
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:json&sheet=${chartConfig.sheetName}`;
+
+    try {
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
+        const jsonString = text.substring(47, text.length - 2);
+        const json = JSON.parse(jsonString);
+
+        const rows = json.table.rows || [];
+        return rows.map((row, index) => {
+            const cell = row.c && row.c[columnIndex] ? row.c[columnIndex].v : '';
+            const value = cell === null || cell === undefined ? '' : String(cell).trim();
+            return {
+                rowIndex: index + 2,
+                value: value
+            };
+        });
+    } catch (error) {
+        console.error(`Error fetching column data from ${columnName}:`, error);
+        return [];
     }
 };
 
@@ -783,12 +940,36 @@ const updateAllCharts = async () => {
         if (chart.fixedRow !== null) {
             // Se é grid-item-7 (PRIORIDADE ATIVA), ler como texto
             if (chart.id === '#grid-item-7') {
-                const textValue = await fetchTextValue(chart.column, chart.fixedRow);
+                const ciRows = await fetchColumnValuesWithRowIndex('CI');
+                const akRows = await fetchColumnValuesWithRowIndex('AK');
+                const akByRow = new Map(akRows.map(item => [item.rowIndex, item.value]));
+
+                const priorityValues = ciRows
+                    .filter(item => String(item.value || '').trim() !== '')
+                    .filter(item => {
+                        const akValue = parsePercentageValue(akByRow.get(item.rowIndex));
+                        return akValue !== 100;
+                    })
+                    .map(item => item.value);
+
+                const textValue = priorityValues.length > 0 ? priorityValues.join(' | ') : '—';
+                const textFontSize = priorityValues.length > 1
+                    ? 'clamp(24px, 2.2vw, 34px)'
+                    : 'clamp(94px, 5vw, 118px)';
+
+                const nextPriority = await fetchTextValue('CH', chart.fixedRow);
                 // Also fetch percentage from chart8 (PERCENTAGEM) for the same fixed row
                 const pctColumn = chartConfig.columns.chart8;
                 const percentage = pctColumn ? await fetchPercentage(pctColumn, chart.fixedRow) : 0;
                 // Render combined text + donut in the same card
-                drawTextWithDonut(chart.id, textValue, percentage, 'clamp(94px, 5vw, 118px)', chartConfig.colors.chart8);
+                drawTextWithDonut(
+                    chart.id,
+                    textValue,
+                    percentage,
+                    textFontSize,
+                    chartConfig.colors.chart8,
+                    nextPriority
+                );
             } else {
                 // Caso contrário, ler como percentual numérico
                 const percentage = await fetchPercentage(chart.column, chart.fixedRow);
@@ -835,7 +1016,7 @@ const initCharts = () => {
 };
 
 /**
- * Updates EVO progress bar (Column AI: GERAL from PS4 sheet for active slots)
+ * Updates EVO progress bar (Column AK: GERAL from PS1 sheet for active slots)
  * Creates dynamic progress bars based on number of active slots
  */
 const updateEvoProgress = async () => {
@@ -866,7 +1047,7 @@ const updateEvoProgress = async () => {
         // Create progress bar for each slot
         for (let i = 0; i < slots.length; i++) {
             const slot = slots[i];
-            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=AI${slot.rowIndex}`;
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=AK${slot.rowIndex}`;
             
             try {
                 const response = await d3.text(SHEET_URL);
@@ -898,7 +1079,7 @@ const updateEvoProgress = async () => {
                         wrapper.appendChild(fillDiv);
                         progressContainer.appendChild(wrapper);
                         
-                        console.log(`✅ Progress bar ${i + 1} updated: ${clampedPercentage}% (Column AI - GERAL, Chave: ${slot.chave}, Lote: ${slot.loteId})`);
+                        console.log(`✅ Progress bar ${i + 1} updated: ${clampedPercentage}% (Column AK - GERAL, Chave: ${slot.chave}, Lote: ${slot.loteId})`);
                     }
                 }
             } catch (error) {
@@ -907,7 +1088,7 @@ const updateEvoProgress = async () => {
         }
         
     } catch (error) {
-        console.error('Error fetching progress from PS4 GERAL (column AI):', error);
+        console.error('Error fetching progress from PS1 GERAL (column AK):', error);
     }
 };
 
@@ -926,7 +1107,7 @@ const fetchPlanningData = async () => {
         const slotsData = [];
         
         for (const slot of slots) {
-            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=A${slot.rowIndex}:H${slot.rowIndex}`;
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=D${slot.rowIndex}:F${slot.rowIndex}`;
             
             try {
                 const response = await d3.text(SHEET_URL);
@@ -934,10 +1115,9 @@ const fetchPlanningData = async () => {
                 
                 slotsData.push({
                     slotNumber: slot.slotNumber,
-                    lote: values[1] || '',        // Column B (LOTE) is index 1
-                    quantidade: values[2] || '',  // Column C (QUANTIDADE / LOTE) is index 2
-                    inicioSoldadura: values[7] || '', // Column H (INÍCIO SOLDADURA / ACABAMENTO) is index 7
-                    dataPretendida: values[5] || '' // Column F (DATA PRETENDIDA) is index 5
+                    lote: values[0] || '',        // Column D (LOTE) is index 0
+                    quantidade: values[1] || '',  // Column E (QUANTIDADE / LOTE) is index 1
+                    dataPretendida: values[2] || '' // Column F (DATA PRETENDIDA) is index 2
                 });
             } catch (error) {
                 console.error(`Error fetching planning data for Slot ${slot.slotNumber}:`, error);
@@ -1018,8 +1198,9 @@ const fetchStatus = async () => {
 };
 
 /**
- * Fetches GOAL chart data from Google Sheets PSMulti
- * Calculates average of Dias Prazo, Dias Usados, Folga for all active slots
+ * Fetches GOAL chart data from Google Sheets PS1
+ * Calculates average of Dias Prazo (F - J), Dias Prazo Extra (F - (J + 7 dias)),
+ * Dias Usados (dias decorridos desde J), Folga (prazo restante)
  */
 const fetchGoalData = async () => {
     try {
@@ -1027,53 +1208,88 @@ const fetchGoalData = async () => {
         const slots = await fetchAllSlotsData();
         
         if (slots.length === 0) {
-            return { diasPrazo: 0, diasUsados: 0, folga: 0 };
+            return { diasPrazo: 0, diasPrazoExtra: 0, diasUsados: 0, folga: 0 };
         }
         
         let totalDiasPrazo = 0;
+        let totalDiasPrazoExtra = 0;
         let totalDiasUsados = 0;
         let totalFolga = 0;
         let validSlots = 0;
+        let validPrazoSlots = 0;
+        let validPrazoExtraSlots = 0;
+        let validDiasUsadosSlots = 0;
         
         // Fetch data for each slot and sum values
         for (const slot of slots) {
             const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=AL${slot.rowIndex}:AN${slot.rowIndex}`;
+            const SHEET_URL_DATES = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=F${slot.rowIndex}:J${slot.rowIndex}`;
             
             try {
                 const response = await d3.text(SHEET_URL);
                 const values = response.split('\n')[0]?.split(',').map(v => v.replace(/^"|"$/g, '').trim()) || [];
                 
-                const diasPrazo = parseFloat(values[0]) || 0;   // Column AL (index 0)
-                const diasUsados = parseFloat(values[1]) || 0;  // Column AM (index 1)
-                const folga = parseFloat(values[2]) || 0;       // Column AN (index 2)
-                
-                totalDiasPrazo += diasPrazo;
-                totalDiasUsados += diasUsados;
-                totalFolga += folga;
+                const diasPrazoFromColumns = parseFloat(values[0]) || 0;   // Column AL (index 0)
+                const folgaFromColumns = parseFloat(values[2]) || 0;       // Column AN (index 2)
+                totalFolga += folgaFromColumns;
                 validSlots++;
-                
-                console.log(`📊 GOAL Slot ${slot.slotNumber}: Prazo=${diasPrazo}, Usados=${diasUsados}, Folga=${folga}`);
+
+                console.log(`📊 GOAL Slot ${slot.slotNumber}: Prazo=${diasPrazoFromColumns}, Folga=${folgaFromColumns}`);
             } catch (error) {
                 console.error(`Error fetching GOAL data for slot ${slot.slotNumber}:`, error);
+            }
+
+            try {
+                const dateResponse = await d3.text(SHEET_URL_DATES);
+                const dateValues = dateResponse.split('\n')[0]?.split(',').map(v => v.replace(/^"|"$/g, '').trim()) || [];
+
+                const dataPretendida = parseSheetDate(dateValues[0]); // Column F (index 0)
+                const inicioSoldadura = parseSheetDate(dateValues[4]); // Column J (index 4)
+                const inicioSoldaduraPlus7 = addDaysUtc(inicioSoldadura, 7);
+                const prazoDiff = diffDays(inicioSoldadura, dataPretendida);
+                const prazoExtraDiff = diffDays(inicioSoldaduraPlus7, dataPretendida);
+                const diasUsadosFromStart = diffDays(inicioSoldadura, new Date());
+
+                if (prazoDiff !== null) {
+                    totalDiasPrazo += Math.max(0, prazoDiff);
+                    validPrazoSlots++;
+                    console.log(`📊 GOAL Slot ${slot.slotNumber}: Prazo(F-J)=${prazoDiff}`);
+                }
+
+                if (prazoExtraDiff !== null) {
+                    totalDiasPrazoExtra += Math.max(0, prazoExtraDiff);
+                    validPrazoExtraSlots++;
+                    console.log(`📊 GOAL Slot ${slot.slotNumber}: PrazoExtra(F-(J+7))=${prazoExtraDiff}`);
+                }
+
+                if (diasUsadosFromStart !== null) {
+                    totalDiasUsados += Math.max(0, diasUsadosFromStart);
+                    validDiasUsadosSlots++;
+                    console.log(`📊 GOAL Slot ${slot.slotNumber}: Usados(J->hoje)=${diasUsadosFromStart}`);
+                }
+            } catch (error) {
+                console.error(`Error fetching GOAL date data for slot ${slot.slotNumber}:`, error);
             }
         }
         
         // Calculate averages
-        const avgDiasPrazo = validSlots > 0 ? totalDiasPrazo / validSlots : 0;
-        const avgDiasUsados = validSlots > 0 ? totalDiasUsados / validSlots : 0;
-        const avgFolga = validSlots > 0 ? totalFolga / validSlots : 0;
+        const avgDiasPrazo = validPrazoSlots > 0 ? totalDiasPrazo / validPrazoSlots : 0;
+        const avgDiasPrazoExtra = validPrazoExtraSlots > 0 ? totalDiasPrazoExtra / validPrazoExtraSlots : 0;
+        const avgDiasUsados = validDiasUsadosSlots > 0 ? totalDiasUsados / validDiasUsadosSlots : 0;
+        const avgFolga = Math.max(0, avgDiasPrazo - avgDiasUsados);
         
-        console.log(`📊 GOAL Averages: Prazo=${avgDiasPrazo.toFixed(1)}, Usados=${avgDiasUsados.toFixed(1)}, Folga=${avgFolga.toFixed(1)}`);
+        console.log(`📊 GOAL Averages: Prazo=${avgDiasPrazo.toFixed(1)}, PrazoExtra=${avgDiasPrazoExtra.toFixed(1)}, Usados=${avgDiasUsados.toFixed(1)}, Folga=${avgFolga.toFixed(1)}`);
         
         return {
             diasPrazo: avgDiasPrazo,
+            diasPrazoExtra: avgDiasPrazoExtra,
             diasUsados: avgDiasUsados,
             folga: avgFolga
         };
 
     } catch (error) {
         console.error('Error fetching GOAL data from PSMulti:', error);
-        return { diasPrazo: 0, diasUsados: 0, folga: 0 };
+        return { diasPrazo: 0, diasPrazoExtra: 0, diasUsados: 0, folga: 0 };
     }
 };
 
@@ -1112,35 +1328,36 @@ const fetchInfoPanelData = async () => {
 /**
  * Updates GOAL chart with data from PM1
  */
-const updateGoalChart = (diasPrazo, diasUsados, folga) => {
-    // Determine color for middle ring (cinza prateado se Dias Usados > Dias Prazo)
-    const middleColor = diasUsados > diasPrazo ? '#C0C0C0' : '#00a2e8';
+const updateGoalChart = (diasPrazo, diasPrazoExtra, diasUsados, folga) => {
+    // Determine color for middle ring (amarelo se Dias Usados > Dias Prazo)
+    const middleColor = diasUsados > diasPrazo ? '#FFD700' : '#00a2e8';
     
     // Determine color for inner ring (vermelho se Folga = 0)
     const innerColor = folga === 0 ? '#FF0000' : '#80a5dc';
     
-    // Maximum value for all rings is diasPrazo + 4
-    const maxValue = diasPrazo + 4;
+    // Base value for middle/inner rings is the outer total (prazo + extra)
+    const prazoBase = Math.max(0, diasPrazo) + Math.max(0, diasPrazoExtra);
     
     // Calculate dash arrays for each circle (full circle = 2 * PI * r)
     // Outer ring: r=80, circumference = 502.65
     const outerCircumference = 2 * Math.PI * 80;
-    const outerDashArray = maxValue > 0 ? `${(diasPrazo / maxValue) * outerCircumference} ${outerCircumference}` : '0 502.65';
+    const outerTotal = Math.max(0, diasPrazo) + Math.max(0, diasPrazoExtra);
+    const outerDashArray = outerTotal > 0 ? `${(Math.max(0, diasPrazo) / outerTotal) * outerCircumference} ${outerCircumference}` : '0 502.65';
     
     // Middle ring: r=60, circumference = 376.99
     const middleCircumference = 2 * Math.PI * 60;
-    const middleDashArray = maxValue > 0 ? `${(diasUsados / maxValue) * middleCircumference} ${middleCircumference}` : '0 376.99';
+    const middleDashArray = prazoBase > 0 ? `${(diasUsados / prazoBase) * middleCircumference} ${middleCircumference}` : '0 376.99';
     
     // Inner ring: r=42, circumference = 263.89
     const innerCircumference = 2 * Math.PI * 42;
-    const innerDashArray = maxValue > 0 ? `${(folga / maxValue) * innerCircumference} ${innerCircumference}` : '0 263.89';
+    const innerDashArray = prazoBase > 0 ? `${(folga / prazoBase) * innerCircumference} ${innerCircumference}` : '0 263.89';
     
     // Update SVG circles
     const svg = document.querySelector('.goal-chart');
     if (svg) {
         const circles = svg.querySelectorAll('circle[stroke-dasharray]');
         if (circles.length >= 3) {
-            // Outer circle (AL - Dias Prazo) - always full
+            // Outer circle (F - J filled, empty uses F - (J + 7 dias))
             circles[0].setAttribute('stroke-dasharray', outerDashArray);
             circles[0].setAttribute('stroke', '#007bff');
             
@@ -1166,26 +1383,10 @@ const updateInfoPanel = async () => {
     
     // Update second card (info-panel-card-1) with buffer from soldaduraEditável
     const bufferItems = await fetchBufferData();
-    const currentLote = planningData.slots && planningData.slots.length > 0 ? planningData.slots[0].lote : ''; // Current LOTE from first slot
-    
-    // Fetch slots to check for all active slots
-    const slots = await fetchAllSlotsData();
-    const slotLotes = [];
-    
-    // Fetch LOTE for each slot (up to 4)
-    for (let i = 0; i < Math.min(slots.length, 4); i++) {
-        const slot = slots[i];
-        const SHEET_URL_SLOT = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=B${slot.rowIndex}`;
-        try {
-            const response = await d3.text(SHEET_URL_SLOT);
-            const lote = response.split('\n')[0]?.trim().replace(/"/g, '');
-            slotLotes.push(lote);
-            console.log(`📦 Slot ${i + 1} LOTE: ${lote}`);
-        } catch (error) {
-            console.error(`Error fetching Slot ${i + 1} LOTE:`, error);
-            slotLotes.push(null);
-        }
-    }
+    const slotLotes = (planningData.slots || [])
+        .map(slot => slot.lote)
+        .filter(lote => lote && String(lote).trim() !== '')
+        .slice(0, 4);
     
     const infoPanelCard1 = document.querySelector('.info-panel-content-1');
     if (infoPanelCard1) {
@@ -1236,9 +1437,9 @@ const updateInfoPanel = async () => {
                 const slotData = planningData.slots[0];
                 infoPanelCard2.innerHTML = `
                     <div class="slot-column">
-                        <div class="info-line">${slotData.inicioSoldadura}</div>
+                        <div class="info-line">Lote: ${slotData.lote}</div>
                         <div class="info-line">Qtd: ${slotData.quantidade}</div>
-                        <div class="info-line">${slotData.lote}</div>
+                        <div class="info-line">${slotData.dataPretendida}</div>
                     </div>
                 `;
             } else {
@@ -1251,9 +1452,9 @@ const updateInfoPanel = async () => {
                 const slotsHtml = planningData.slots.map(slotData => {
                     return `
                         <div class="slot-column">
-                            <div class="info-line">${slotData.inicioSoldadura}</div>
+                            <div class="info-line">Lote: ${slotData.lote}</div>
                             <div class="info-line">Qtd: ${slotData.quantidade}</div>
-                            <div class="info-line">${slotData.lote}</div>
+                            <div class="info-line">${slotData.dataPretendida}</div>
                         </div>
                     `;
                 }).join('');
@@ -1266,8 +1467,8 @@ const updateInfoPanel = async () => {
         }
     }
     
-    // Update status indicator based on CD column (STATUS)
-    const statusValue = (await fetchTextValue('CD', 2)).toUpperCase();
+    // Update status indicator based on CF column (STATUS)
+    const statusValue = (await fetchTextValue('CF', 2)).toUpperCase();
     const statusIndicator = document.getElementById('status-indicator');
     if (statusIndicator) {
         if (statusValue === 'ON') {
@@ -1277,21 +1478,28 @@ const updateInfoPanel = async () => {
             statusIndicator.src = 'https://static.wixstatic.com/media/a6967f_226d67906a30456d92ac9b34c151654a~mv2.png';
             statusIndicator.alt = 'Status OFF';
         }
-        console.log('🔴 Status updated from CD2:', statusValue);
+        console.log('🔴 Status updated from CF2:', statusValue);
     }
     
     // Update GOAL chart with data from PSMulti
     const goalData = await fetchGoalData();
-    updateGoalChart(goalData.diasPrazo, goalData.diasUsados, goalData.folga);
+    updateGoalChart(goalData.diasPrazo, goalData.diasPrazoExtra, goalData.diasUsados, goalData.folga);
     
-    // Update Log Operacional card (info-panel-card-5) with CH2 content in grid layout
+    // Update Log Operacional card (info-panel-card-5) with CI values where AK == 100%
     const logOperacionalContainer = document.querySelector('.info-panel-content-5');
     if (logOperacionalContainer) {
-        const ch2Value = await fetchTextValue('CH', 2);
+        const ciRows = await fetchColumnValuesWithRowIndex('CI');
+        const akRows = await fetchColumnValuesWithRowIndex('AK');
+        const akByRow = new Map(akRows.map(item => [item.rowIndex, item.value]));
+
+        const logValues = ciRows
+            .filter(item => String(item.value || '').trim() !== '')
+            .filter(item => parsePercentageValue(akByRow.get(item.rowIndex)) === 100)
+            .map(item => item.value);
         logOperacionalContainer.innerHTML = ''; // Clear existing content
         
         // Determine if there's actual content
-        const hasContent = ch2Value && ch2Value.trim() !== '' && ch2Value !== '—';
+        const hasContent = logValues.length > 0;
         const bgColor = hasContent 
             ? 'rgba(82, 196, 26, 0.15)' // Slightly green when has values
             : 'rgba(255, 255, 255, 0.08)'; // Default slight white
@@ -1299,22 +1507,22 @@ const updateInfoPanel = async () => {
             ? 'rgba(82, 196, 26, 0.3)' // Green border when has values
             : 'rgba(255, 255, 255, 0.15)'; // Default border
         
-        // Create 6 grid items (2 columns × 3 rows)
-        for (let i = 0; i < 6; i++) {
+        if (logValues.length === 0) {
             const gridItem = document.createElement('div');
             gridItem.style.cssText = `padding: 6px; background: ${bgColor}; border-radius: 4px; border: 1px solid ${borderColor}; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; overflow-wrap: break-word; overflow: hidden; white-space: normal; line-height: 1.2;`;
-            
-            // If first item, display the CH2 value; others can display placeholder or additional data
-            if (i === 0) {
-                gridItem.textContent = ch2Value || '—';
-            } else {
-                gridItem.textContent = '—'; // Placeholder for additional data
-            }
-            
+            gridItem.textContent = '—';
             logOperacionalContainer.appendChild(gridItem);
+            return;
         }
-        
-        console.log('📋 Log Operacional grid updated with CH2:', ch2Value, '| Has content:', hasContent);
+
+        logValues.forEach(value => {
+            const gridItem = document.createElement('div');
+            gridItem.style.cssText = `padding: 6px; background: ${bgColor}; border-radius: 4px; border: 1px solid ${borderColor}; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; overflow-wrap: break-word; overflow: hidden; white-space: normal; line-height: 1.2;`;
+            gridItem.textContent = value;
+            logOperacionalContainer.appendChild(gridItem);
+        });
+
+        console.log('📋 Log Operacional grid updated with CI values:', logValues.length, '| Has content:', hasContent);
     }
     
     console.log('Info panel updated with:', data);
