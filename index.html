@@ -590,13 +590,8 @@
         const video = document.getElementById('grid-video');
         if (!video) return;
 
-        const sources = [
-          'https://video.wixstatic.com/video/a6967f_1729e31da8fa46b7994d19a82849b401/720p/mp4/file.mp4',
-          'https://video.wixstatic.com/video/a6967f_2865b492f9de41f1831de9488a94124e/720p/mp4/file.mp4'
-        ];
-
-        const SWITCH_INTERVAL_MS = 45000;
-        let currentIndex = 0;
+        const VIDEO_SRC = 'https://video.wixstatic.com/video/a6967f_d8c9074862d14a3f81d17dd79de8574c/480p/mp4/file.mp4';
+        const SWITCH_INTERVAL_MS = 30000;
 
         const sourceEl = video.querySelector('source') || document.createElement('source');
         if (!sourceEl.parentNode) {
@@ -604,10 +599,9 @@
           video.appendChild(sourceEl);
         }
 
-        const setSource = (index) => {
-          currentIndex = index % sources.length;
+        const playVideo = () => {
           video.loop = false;
-          sourceEl.src = sources[currentIndex];
+          sourceEl.src = VIDEO_SRC;
           video.load();
           const playPromise = video.play();
           if (playPromise && typeof playPromise.catch === 'function') {
@@ -615,9 +609,13 @@
           }
         };
 
-        setSource(0);
+        playVideo();
         setInterval(() => {
-          setSource(currentIndex + 1);
+          video.currentTime = 0;
+          const playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {});
+          }
         }, SWITCH_INTERVAL_MS);
       })();
     </script>
