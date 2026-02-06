@@ -1530,7 +1530,11 @@ const updateInfoPanel = async () => {
 
         rangeRows.forEach(row => {
             for (let i = 1; i < row.values.length; i++) {
-                const percentage = parsePercentageValue(row.values[i]);
+                const rawValue = row.values[i];
+                let percentage = parsePercentageValue(rawValue);
+                if (percentage !== null && percentage <= 1) {
+                    percentage = percentage * 100;
+                }
                 if (percentage === 100) {
                     const leftValue = row.values[i - 1];
                     if (leftValue && String(leftValue).trim() !== '') {
