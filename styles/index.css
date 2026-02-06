@@ -251,6 +251,11 @@ canvas {
     transition: width 0.5s ease;
 }
 
+/* PRIORIDADE ATIVA: Proxima Prioridade label */
+.next-priority-label {
+    background: linear-gradient(135deg, rgb(9, 167, 247) 0%, rgba(0, 0, 0, 1) 100%);
+}
+
 /* UTILS: dat.GUI Hides */
 .dg.a { margin-top: 10px; }
 .dg .close-button, .dg .close, .dg .title { display: none !important; }

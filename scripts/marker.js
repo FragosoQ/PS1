@@ -55,6 +55,9 @@ class Marker {
     const countryAbbreviations = {
       'UNITED STATES': 'USA',
       'UNITED KINGDOM': 'UK',
+      'UK': 'UK',
+      'ENGLAND': 'UK',
+      'INGLATERRA': 'UK',
       'SOUTH AFRICA': 'SOUTH AFRICA',
       'SAUDI ARABIA': 'SAUDI ARABIA',
       'UNITED ARAB EMIRATES': 'UAE',

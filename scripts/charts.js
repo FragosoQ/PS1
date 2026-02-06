@@ -23,8 +23,10 @@ const mapCountryToEnglish = (countryNamePT) => {
         'BOLÍVIA': 'BOLIVIA',
         'PARAGUAI': 'PARAGUAY',
         'URUGUAI': 'URUGUAY',
-        'REINO UNIDO': 'UNITED KINGDOM',
-        'UK': 'UNITED KINGDOM',
+        'REINO UNIDO': 'UK',
+        'INGLATERRA': 'UK',
+        'UK': 'UK',
+        'UNITED KINGDOM': 'UK',
         'ESTADOS UNIDOS': 'UNITED STATES',
         'USA': 'UNITED STATES',
         'EUA': 'UNITED STATES',
@@ -185,13 +187,13 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
 
     if (cornerText && String(cornerText).trim() !== '') {
         main.append('div')
+            .attr('class', 'next-priority-label')
             .style('position', 'absolute')
             .style('top', '6px')
             .style('right', '8px')
             .style('font-size', 'clamp(22px, 1.4vw, 24px)')
             .style('font-weight', '700')
             .style('color', 'rgba(255, 255, 255, 0.95)')
-            .style('background', 'linear-gradient(135deg, rgba(81, 184, 234, 1) 0%, rgba(0, 0, 0, 1) 100%)')
             .style('padding', '4px 6px')
             .style('border-radius', '6px')
             .style('text-transform', 'uppercase')
@@ -201,7 +203,7 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
             .style('overflow', 'hidden')
             .style('text-overflow', 'ellipsis')
             .style('white-space', 'nowrap')
-            .html(`<span class="fi fi-tr-angle-double-right" aria-hidden="true" style="margin-right:6px; font-size:0.9em;"></span>${String(cornerText).trim()}`);
+            .html(`<span class="fi fi-tr-angle-double-right" aria-hidden="true" style="margin-right:6px; font-size:calc(0.9em - 5px);"></span>${String(cornerText).trim()}`);
     }
 
     // Text area
@@ -255,24 +257,24 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
 // Configuration for charts
 const chartConfig = {
     colors: {
-        chart1: '#80a5dc',
+        chart1: '#4b8cf2',
         chart2: '#4b8cf2',
-        chart3: '#007bff',
-        chart4: '#00a2e8',
-        chart5: '#5bc0de',
-        chart6: '#3a94ff',
-        chart7: '#FF6B6B',  // Vermelho - PRIORIDADE ATIVA
-        chart8: '#52C41A',  // Verde - PERCENTAGEM
-        // Cores para múltiplos slots
+        chart3: '#4b8cf2',
+        chart4: '#4b8cf2',
+        chart5: '#4b8cf2',
+        chart6: '#4b8cf2',
+        chart7: '#4b8cf2',
+        chart8: '#4b8cf2',
+        // Cores para múltiplos slots (todas azuis)
         slotColors: [
-            '#4b8cf2', // Azul - Slot_1_Em Curso
-            '#C0C0C0', // Cinza Prateado - Slot_2_Em Curso
-            '#FFD700', // Amarelo - Slot_3_Em Curso
-            '#FF6347', // Tomate - Slot_4_Em Curso
-            '#00CED1', // Turquesa - Slot_5_Em Curso
-            '#9370DB', // Roxo médio - Slot_6_Em Curso
-            '#32CD32', // Verde lima - Slot_7_Em Curso
-            '#FF69B4'  // Rosa - Slot_8_Em Curso
+            '#4b8cf2',
+            '#4b8cf2',
+            '#4b8cf2',
+            '#4b8cf2',
+            '#4b8cf2',
+            '#4b8cf2',
+            '#4b8cf2',
+            '#4b8cf2'
         ]
     },
     spreadsheetId: '1GQUB52a2gKR429bjqJrNkbP5rjR7Z_4v85z9M7_Cr8Y',

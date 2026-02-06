@@ -111,6 +111,11 @@ function findCountryCoordinates(countryName, database) {
   if (!countryName) return null;
   
   const normalizedName = countryName.trim().toLowerCase();
+
+  const normalizeCountryLabel = (name) => {
+    if (!name) return name;
+    return name === 'United Kingdom' ? 'UK' : name;
+  };
   
   // Mapeamento completo PT -> EN de nomes de países
   const nameMapping = {
@@ -261,6 +266,8 @@ function findCountryCoordinates(countryName, database) {
     'quénia': 'Kenya',
     'quirguistão': 'Kyrgyz Republic',
     'reino unido': 'United Kingdom',
+    'inglaterra': 'United Kingdom',
+    'england': 'United Kingdom',
     'república centro-africana': 'Central African Republic',
     'república democrática do congo': 'Congo, Dem. Rep.',
     'república dominicana': 'Dominican Republic',
@@ -322,7 +329,7 @@ function findCountryCoordinates(countryName, database) {
     const country = database.find(c => c.name === mappedName);
     if (country && country.latitude && country.longitude) {
       return {
-        name: country.name,
+        name: normalizeCountryLabel(country.name),
         latitude: country.latitude,
         longitude: country.longitude,
         capitalCity: country.capitalCity
@@ -337,7 +344,7 @@ function findCountryCoordinates(countryName, database) {
   
   if (country && country.latitude && country.longitude) {
     return {
-      name: country.name,
+      name: normalizeCountryLabel(country.name),
       latitude: country.latitude,
       longitude: country.longitude,
       capitalCity: country.capitalCity
@@ -354,7 +361,7 @@ function findCountryCoordinates(countryName, database) {
   
   if (partialMatch && partialMatch.latitude && partialMatch.longitude) {
     return {
-      name: partialMatch.name,
+      name: normalizeCountryLabel(partialMatch.name),
       latitude: partialMatch.latitude,
       longitude: partialMatch.longitude,
       capitalCity: partialMatch.capitalCity

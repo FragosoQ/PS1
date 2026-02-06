@@ -21,6 +21,8 @@ const normalizeCountryName = (countryName) => {
         'CROATIA': 'CROÁCIA',
         'REINO UNIDO': 'UK', 
         'INGLATERRA': 'UK',
+        'ENGLAND': 'UK',
+        'UNITED KINGDOM': 'UK',
         'UK': 'UK',
         'EUA': 'USA',
         'USA': 'USA',
