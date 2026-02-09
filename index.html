@@ -165,16 +165,23 @@
         overflow: hidden;
         height: 100%;
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
         gap: 8px;
         align-content: start;
     }
     
-    /* Grid 2x2 quando houver mais de 3 slots */
+    /* Grid 1x2 quando houver 2 lotes */
+    .info-panel-content-2.two-rows {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(2, 1fr);
+      gap: 6px;
+    }
+    
+    /* Grid 2x2 quando houver 3+ lotes */
     .info-panel-content-2.multi-slot {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-        gap: 6px;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 6px;
     }
     
     /* Quando há apenas 1 slot */
@@ -208,16 +215,30 @@
         overflow-wrap: break-word;
         hyphens: auto;
         line-height: 1.2;
-        font-size: clamp(10px, 0.9vw, 13px);
+      font-size: clamp(9px, 0.85vw, 13px);
     }
     
-    /* Texto ainda menor na grid 4x4 */
+    /* Texto menor quando houver mais de 1 lote */
+    .info-panel-content-2.two-rows .slot-column .info-line,
     .info-panel-content-2.multi-slot .slot-column .info-line {
-        font-size: clamp(9px, 0.8vw, 11px);
+      font-size: clamp(8px, 0.75vw, 11px);
     }
     
     .info-panel-card-3 .card-title {
         font-size: clamp(17px, 1.7vw, 21px) !important;
+    }
+
+    .info-panel-content-5 {
+      align-items: stretch;
+      grid-auto-rows: minmax(0, 1fr);
+      row-gap: 10px;
+      column-gap: 10px;
+    }
+
+    .info-panel-content-5 > div {
+      height: 100%;
+      min-height: 0;
+      box-sizing: border-box;
     }
 
     /* --- NOVAS LINHAS: PRIORIDADE ATIVA --- */
@@ -413,11 +434,11 @@
       
       /* Ajuste do card PLANEAMENTO no mobile */
       .info-panel-card-2 .info-panel-content-2 {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: 1fr;
           gap: 6px;
       }
       
-      /* Grid 2x2 no mobile quando houver 4+ slots */
+        /* Grid 2x2 no mobile quando houver 3+ slots */
       .info-panel-content-2.multi-slot {
           grid-template-columns: repeat(2, 1fr);
       }
@@ -643,7 +664,7 @@
       </div>
       <div class="grid-item info-panel-card-5">
         <div class="card-title">Log Operacional</div>
-        <div class="info-panel-content-5" style="width: 100%; height: 100%; padding: 8px; box-sizing: border-box; overflow: hidden; font-size: clamp(10px, 1vw, 14px); color: white; text-align: left; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); gap: 8px;"></div>
+        <div class="info-panel-content-5" style="width: 100%; height: 100%; padding: 8px; box-sizing: border-box; overflow: hidden; font-size: clamp(10px, 1vw, 14px); color: white; text-align: left; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 12px; row-gap: 12px; column-gap: 12px; align-items: stretch;"></div>
       </div>
       <div class="grid-item info-panel-card-3">
         <div class="card-title">GOAL</div>

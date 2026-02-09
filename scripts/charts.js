@@ -1459,11 +1459,12 @@ const updateInfoPanel = async () => {
     
     if (infoPanelCard2) {
         if (planningData.slots && planningData.slots.length > 0) {
-            // Remove classe multi-slot por padrão
+            // Remove classes de grelha por padrao
+            infoPanelCard2.classList.remove('two-rows');
             infoPanelCard2.classList.remove('multi-slot');
             
             // Remove ou adiciona classe expanded-planeamento ao grid-container
-            if (planningData.slots.length > 3) {
+            if (planningData.slots.length > 2) {
                 gridContainer?.classList.add('expanded-planeamento');
             } else {
                 gridContainer?.classList.remove('expanded-planeamento');
@@ -1481,8 +1482,10 @@ const updateInfoPanel = async () => {
                 `;
             } else {
                 // Multiple slots - display in grid
-                // Adiciona classe multi-slot se houver mais de 3 slots (grid 2x2)
-                if (planningData.slots.length > 3) {
+                // 2 lotes: grelha 1x2; 3+ lotes: grelha 2x2
+                if (planningData.slots.length === 2) {
+                    infoPanelCard2.classList.add('two-rows');
+                } else {
                     infoPanelCard2.classList.add('multi-slot');
                 }
                 
