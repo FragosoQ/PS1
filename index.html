@@ -303,12 +303,17 @@
     /* --- BOTTOM SECTION --- */
     .bottom-section {
       grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 1fr 1.2fr 1fr;
+      display: flex;
       gap: 10px;
       min-height: 0;
       height: 18vh;
       max-height: 200px;
+      align-items: stretch;
+    }
+
+    .bottom-section .grid-item {
+      flex: 1 1 0;
+      min-width: 0;
     }
 
     .goal-chart-container {

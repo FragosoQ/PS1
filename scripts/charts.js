@@ -583,6 +583,45 @@ const fetchRangeValuesWithRowIndex = async (startColumn, endColumn) => {
     }
 };
 
+const fetchRangeHeadersAndRow = async (startColumn, endColumn, rowNumber) => {
+    const startIndex = columnLetterToIndex(startColumn);
+    const endIndex = columnLetterToIndex(endColumn);
+
+    if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) {
+        console.warn(`Invalid column range: ${startColumn}:${endColumn}`);
+        return { headers: [], values: [] };
+    }
+
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:json&sheet=${chartConfig.sheetName}`;
+
+    try {
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
+        const jsonString = text.substring(47, text.length - 2);
+        const json = JSON.parse(jsonString);
+
+        const headers = (json.table.cols || [])
+            .slice(startIndex, endIndex + 1)
+            .map(col => (col.label || col.id || '').toString().trim());
+
+        const rowIndex = Math.max(0, rowNumber - 2);
+        const row = (json.table.rows || [])[rowIndex];
+        const values = [];
+
+        if (row && row.c) {
+            for (let col = startIndex; col <= endIndex; col++) {
+                const cell = row.c[col] ? row.c[col].v : '';
+                values.push(cell === null || cell === undefined ? '' : String(cell).trim());
+            }
+        }
+
+        return { headers, values };
+    } catch (error) {
+        console.error(`Error fetching range headers/data from ${startColumn}:${endColumn}:`, error);
+        return { headers: [], values: [] };
+    }
+};
+
 /**
  * Fetches countries from PaísesSoldadura sheet (column "País")
  * Returns all non-empty values with slotNumber defaulting to 1.
@@ -1525,25 +1564,16 @@ const updateInfoPanel = async () => {
     const goalData = await fetchGoalData();
     updateGoalChart(goalData.diasPrazo, goalData.diasPrazoExtra, goalData.diasUsados, goalData.folga);
     
-    // Update Log Operacional card (info-panel-card-5) with values left of 100% in AL:CE
+    // Update Log Operacional card (info-panel-card-5) using CN1:DK2 (headers + row 2 values)
     const logOperacionalContainer = document.querySelector('.info-panel-content-5');
     if (logOperacionalContainer) {
-        const rangeRows = await fetchRangeValuesWithRowIndex('AL', 'CE');
+        const { headers, values } = await fetchRangeHeadersAndRow('CN', 'DK', 2);
         const logValues = [];
 
-        rangeRows.forEach(row => {
-            for (let i = 1; i < row.values.length; i++) {
-                const rawValue = row.values[i];
-                let percentage = parsePercentageValue(rawValue);
-                if (percentage !== null && percentage <= 1) {
-                    percentage = percentage * 100;
-                }
-                if (percentage === 100) {
-                    const leftValue = row.values[i - 1];
-                    if (leftValue && String(leftValue).trim() !== '') {
-                        logValues.push(String(leftValue).trim());
-                    }
-                }
+        headers.forEach((header, index) => {
+            const value = values[index];
+            if (String(value).trim() === '1' && header) {
+                logValues.push(header);
             }
         });
         logOperacionalContainer.innerHTML = ''; // Clear existing content
