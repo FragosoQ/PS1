@@ -1230,6 +1230,56 @@ const fetchBufferData = async () => {
 };
 
 /**
+ * Fetches WIP lotes from WIP sheet (A1:B9) where GERAL is not "100%" or empty
+ */
+const fetchWipLotes = async () => {
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/1GQUB52a2gKR429bjqJrNkbP5rjR7Z_4v85z9M7_Cr8Y/gviz/tq?tqx=out:csv&sheet=WIP&range=A1:B9`;
+
+    try {
+        const response = await d3.text(SHEET_URL);
+        const lines = response.split('\n').map(line => line.trim()).filter(Boolean);
+
+        if (lines.length === 0) {
+            return [];
+        }
+
+        const rows = lines.map(line =>
+            line.split(',').map(value => value.replace(/^"|"$/g, '').trim())
+        );
+
+        const headers = rows[0].map(header => header.toUpperCase());
+        const loteIndex = headers.indexOf('LOTE');
+        const geralIndex = headers.indexOf('GERAL');
+
+        const resolvedLoteIndex = loteIndex === -1 ? 0 : loteIndex;
+        const resolvedGeralIndex = geralIndex === -1 ? 1 : geralIndex;
+
+        return rows
+            .slice(1)
+            .map(row => ({
+                lote: row[resolvedLoteIndex] || '',
+                geral: row[resolvedGeralIndex] || ''
+            }))
+            .filter(item => {
+                const lote = String(item.lote).trim();
+                const geral = String(item.geral).trim();
+                return lote !== '' && geral !== '' && geral !== '100%';
+            })
+            .map(item => {
+                const rawPercent = String(item.geral).replace('%', '').replace(',', '.').trim();
+                const percent = Number.parseFloat(rawPercent);
+                return {
+                    lote: item.lote,
+                    percent: Number.isFinite(percent) ? percent : 0
+                };
+            });
+    } catch (error) {
+        console.error('Error fetching WIP data:', error);
+        return [];
+    }
+};
+
+/**
  * Fetches status from Google Sheets PSMulti (Column AI: STATUS)
  * Verifica todos os slots ativos: se qualquer um for OFF, retorna OFF
  * Apenas se todos forem ON, retorna ON
@@ -1457,8 +1507,8 @@ const updateInfoPanel = async () => {
     // Fetch planning data once (used by multiple cards)
     const planningData = await fetchPlanningData();
     
-    // Update second card (info-panel-card-1) with buffer from soldaduraEditável
-    const bufferItems = await fetchBufferData();
+    // Update second card (info-panel-card-1) with WIP LOTE list
+    const wipItems = await fetchWipLotes();
     const slotLotes = (planningData.slots || [])
         .map(slot => slot.lote)
         .filter(lote => lote && String(lote).trim() !== '')
@@ -1466,13 +1516,13 @@ const updateInfoPanel = async () => {
     
     const infoPanelCard1 = document.querySelector('.info-panel-content-1');
     if (infoPanelCard1) {
-        if (bufferItems.length > 0) {
-            infoPanelCard1.innerHTML = bufferItems
+        if (wipItems.length > 0) {
+            infoPanelCard1.innerHTML = wipItems
                 .map(item => {
                     let className = 'buffer-item';
                     
-                    // Check which slot matches this buffer item
-                    const slotIndex = slotLotes.findIndex(lote => lote && lote === item);
+                    // Check which slot matches this WIP item
+                    const slotIndex = slotLotes.findIndex(lote => lote && lote === item.lote);
                     
                     if (slotIndex === 0) {
                         className += ' active'; // Slot 1 - azul
@@ -1482,9 +1532,11 @@ const updateInfoPanel = async () => {
                         className += ' active-slot3'; // Slot 3 - amarelo
                     } else if (slotIndex === 3) {
                         className += ' active-slot4'; // Slot 4 - rosa
+                    } else if (item.percent > 0) {
+                        className += ' active-weak'; // Outros lotes em curso
                     }
                     
-                    return `<div class="${className}">${item}</div>`;
+                    return `<div class="${className}">${item.lote}</div>`;
                 })
                 .join('');
         } else {
