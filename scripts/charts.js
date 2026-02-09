@@ -455,6 +455,68 @@ const parsePercentageValue = (rawValue) => {
     return Number.isNaN(value) ? null : value;
 };
 
+const normalizePriorityKey = (value) => {
+    if (value === null || value === undefined) {
+        return '';
+    }
+
+    return String(value)
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, '_')
+        .replace(/-+/g, '_');
+};
+
+const fetchPriorityPercentageForLabel = async (label) => {
+    const key = normalizePriorityKey(label);
+    if (!key) {
+        return null;
+    }
+
+    const candidateKeys = [key];
+    if (/^\d+(?:_\d+)?$/.test(key)) {
+        candidateKeys.push(`P${key}`);
+    }
+    if (/^P\d+/.test(key)) {
+        candidateKeys.push(key.replace(/^P/, ''));
+    }
+
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=AL1:CE2`;
+
+    try {
+        const response = await d3.text(SHEET_URL);
+        const rows = d3.csvParseRows(response).filter(row => row.length > 0);
+
+        if (rows.length < 2) {
+            console.warn('Priority percent range AL1:CE2 returned no data.');
+            return null;
+        }
+
+        const headers = rows[0];
+        const values = rows[1];
+
+        for (let i = 0; i < headers.length - 1; i++) {
+            const headerKey = normalizePriorityKey(headers[i]);
+            if (!candidateKeys.includes(headerKey)) {
+                continue;
+            }
+
+            const nextHeader = normalizePriorityKey(headers[i + 1]);
+            if (nextHeader !== '%') {
+                continue;
+            }
+
+            const parsed = parsePercentageValue(values[i + 1]);
+            return parsed === null ? null : Math.min(100, Math.max(0, parsed));
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching priority percent range AL1:CE2:', error);
+        return null;
+    }
+};
+
 const parseSheetDate = (rawValue) => {
     if (rawValue === null || rawValue === undefined) {
         return null;
@@ -1034,9 +1096,9 @@ const updateAllCharts = async () => {
                     : 'clamp(94px, 5vw, 118px)';
 
                 const nextPriority = await fetchTextValue('CH', chart.fixedRow);
-                // Also fetch percentage from chart8 (PERCENTAGEM) for the same fixed row
-                const pctColumn = chartConfig.columns.chart8;
-                const percentage = pctColumn ? await fetchPercentage(pctColumn, chart.fixedRow) : 0;
+                const activePriorityLabel = priorityValues.length > 0 ? priorityValues[0] : '';
+                const priorityPercentage = await fetchPriorityPercentageForLabel(activePriorityLabel);
+                const percentage = priorityPercentage !== null ? priorityPercentage : 0;
                 // Render combined text + donut in the same card
                 drawTextWithDonut(
                     chart.id,
