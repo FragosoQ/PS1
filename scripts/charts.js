@@ -203,7 +203,7 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
             .style('overflow', 'hidden')
             .style('text-overflow', 'ellipsis')
             .style('white-space', 'nowrap')
-            .html(`<span class="fi fi-tr-angle-double-right" aria-hidden="true" style="margin-right:6px; font-size:calc(0.9em - 5px);"></span>${String(cornerText).trim()}`);
+            .html(`<img class="separator-icon" src="https://static.wixstatic.com/media/a6967f_874354ad69c5461eafd229ab23540233~mv2.png" alt="" aria-hidden="true">${String(cornerText).trim()}`);
     }
 
     // Text area

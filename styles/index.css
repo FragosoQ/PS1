@@ -167,6 +167,14 @@ canvas {
     width: 100%;
 }
 
+.separator-icon {
+    width: 0.9em;
+    height: 0.9em;
+    margin-right: 6px;
+    vertical-align: middle;
+    object-fit: contain;
+}
+
 /* O GRANDE NÚMERO */
 .info-panel-content-1 .info-line {
     font-size: clamp(40px, 10vw, 90px); 
