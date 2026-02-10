@@ -1387,8 +1387,7 @@ const fetchStatus = async () => {
 
 /**
  * Fetches GOAL chart data from Google Sheets PS1
- * Calculates average of Dias Prazo (F - J), Dias Prazo Extra (F - (J + 7 dias)),
- * Dias Usados (dias decorridos desde J), Folga (prazo restante)
+ * Uses columns DL (Dias Prazo), DM (Folga), DN (Dias Usados)
  */
 const fetchGoalData = async () => {
     try {
@@ -1400,73 +1399,40 @@ const fetchGoalData = async () => {
         }
         
         let totalDiasPrazo = 0;
-        let totalDiasPrazoExtra = 0;
         let totalDiasUsados = 0;
         let totalFolga = 0;
         let validSlots = 0;
-        let validPrazoSlots = 0;
-        let validPrazoExtraSlots = 0;
-        let validDiasUsadosSlots = 0;
         
         // Fetch data for each slot and sum values
         for (const slot of slots) {
-            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=AL${slot.rowIndex}:AN${slot.rowIndex}`;
-            const SHEET_URL_DATES = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=F${slot.rowIndex}:J${slot.rowIndex}`;
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${chartConfig.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${chartConfig.sheetName}&range=DL${slot.rowIndex}:DN${slot.rowIndex}`;
             
             try {
                 const response = await d3.text(SHEET_URL);
                 const values = response.split('\n')[0]?.split(',').map(v => v.replace(/^"|"$/g, '').trim()) || [];
                 
-                const diasPrazoFromColumns = parseFloat(values[0]) || 0;   // Column AL (index 0)
-                const folgaFromColumns = parseFloat(values[2]) || 0;       // Column AN (index 2)
+                const diasPrazoFromColumns = parseFloat(values[0]) || 0;   // Column DL (index 0)
+                const folgaFromColumns = parseFloat(values[1]) || 0;       // Column DM (index 1)
+                const diasUsadosFromColumns = parseFloat(values[2]) || 0;  // Column DN (index 2)
+
+                totalDiasPrazo += diasPrazoFromColumns;
                 totalFolga += folgaFromColumns;
+                totalDiasUsados += diasUsadosFromColumns;
                 validSlots++;
 
-                console.log(`📊 GOAL Slot ${slot.slotNumber}: Prazo=${diasPrazoFromColumns}, Folga=${folgaFromColumns}`);
+                console.log(`📊 GOAL Slot ${slot.slotNumber}: Prazo=${diasPrazoFromColumns}, Folga=${folgaFromColumns}, Usados=${diasUsadosFromColumns}`);
             } catch (error) {
                 console.error(`Error fetching GOAL data for slot ${slot.slotNumber}:`, error);
-            }
-
-            try {
-                const dateResponse = await d3.text(SHEET_URL_DATES);
-                const dateValues = dateResponse.split('\n')[0]?.split(',').map(v => v.replace(/^"|"$/g, '').trim()) || [];
-
-                const dataPretendida = parseSheetDate(dateValues[0]); // Column F (index 0)
-                const inicioSoldadura = parseSheetDate(dateValues[4]); // Column J (index 4)
-                const inicioSoldaduraPlus7 = addDaysUtc(inicioSoldadura, 7);
-                const prazoDiff = diffDays(inicioSoldadura, dataPretendida);
-                const prazoExtraDiff = diffDays(inicioSoldaduraPlus7, dataPretendida);
-                const diasUsadosFromStart = diffDays(inicioSoldadura, new Date());
-
-                if (prazoDiff !== null) {
-                    totalDiasPrazo += Math.max(0, prazoDiff);
-                    validPrazoSlots++;
-                    console.log(`📊 GOAL Slot ${slot.slotNumber}: Prazo(F-J)=${prazoDiff}`);
-                }
-
-                if (prazoExtraDiff !== null) {
-                    totalDiasPrazoExtra += Math.max(0, prazoExtraDiff);
-                    validPrazoExtraSlots++;
-                    console.log(`📊 GOAL Slot ${slot.slotNumber}: PrazoExtra(F-(J+7))=${prazoExtraDiff}`);
-                }
-
-                if (diasUsadosFromStart !== null) {
-                    totalDiasUsados += Math.max(0, diasUsadosFromStart);
-                    validDiasUsadosSlots++;
-                    console.log(`📊 GOAL Slot ${slot.slotNumber}: Usados(J->hoje)=${diasUsadosFromStart}`);
-                }
-            } catch (error) {
-                console.error(`Error fetching GOAL date data for slot ${slot.slotNumber}:`, error);
             }
         }
         
         // Calculate averages
-        const avgDiasPrazo = validPrazoSlots > 0 ? totalDiasPrazo / validPrazoSlots : 0;
-        const avgDiasPrazoExtra = validPrazoExtraSlots > 0 ? totalDiasPrazoExtra / validPrazoExtraSlots : 0;
-        const avgDiasUsados = validDiasUsadosSlots > 0 ? totalDiasUsados / validDiasUsadosSlots : 0;
-        const avgFolga = Math.max(0, avgDiasPrazo - avgDiasUsados);
+        const avgDiasPrazo = validSlots > 0 ? totalDiasPrazo / validSlots : 0;
+        const avgDiasUsados = validSlots > 0 ? totalDiasUsados / validSlots : 0;
+        const avgFolga = validSlots > 0 ? totalFolga / validSlots : 0;
+        const avgDiasPrazoExtra = 0;
         
-        console.log(`📊 GOAL Averages: Prazo=${avgDiasPrazo.toFixed(1)}, PrazoExtra=${avgDiasPrazoExtra.toFixed(1)}, Usados=${avgDiasUsados.toFixed(1)}, Folga=${avgFolga.toFixed(1)}`);
+        console.log(`📊 GOAL Averages: Prazo=${avgDiasPrazo.toFixed(1)}, Usados=${avgDiasUsados.toFixed(1)}, Folga=${avgFolga.toFixed(1)}`);
         
         return {
             diasPrazo: avgDiasPrazo,
@@ -1517,28 +1483,33 @@ const fetchInfoPanelData = async () => {
  * Updates GOAL chart with data from PM1
  */
 const updateGoalChart = (diasPrazo, diasPrazoExtra, diasUsados, folga) => {
-    // Determine color for middle ring (amarelo se Dias Usados > Dias Prazo)
-    const middleColor = diasUsados > diasPrazo ? '#FFD700' : '#00a2e8';
+    const outerPrimary = Math.max(0, diasPrazo);
+    const outerTotal = outerPrimary + 5;
+    const middleTotal = Math.max(0, diasUsados) + 5;
+    const outerRatio = outerTotal > 0 ? outerPrimary / outerTotal : 0;
+    const middleRatio = middleTotal > 0 ? Math.max(0, diasUsados) / middleTotal : 0;
+
+    // Determine color for middle ring (amarelo se o anel do meio ultrapassar o exterior)
+    const middleColor = middleRatio > outerRatio ? '#FFD700' : (middleRatio === outerRatio ? '#9aa3ad' : '#00a2e8');
     
     // Determine color for inner ring (vermelho se Folga = 0)
     const innerColor = folga === 0 ? '#FF0000' : '#80a5dc';
     
-    // Base value for middle/inner rings is the outer total (prazo + extra)
-    const prazoBase = Math.max(0, diasPrazo) + Math.max(0, diasPrazoExtra);
-    
     // Calculate dash arrays for each circle (full circle = 2 * PI * r)
     // Outer ring: r=80, circumference = 502.65
     const outerCircumference = 2 * Math.PI * 80;
-    const outerTotal = Math.max(0, diasPrazo) + Math.max(0, diasPrazoExtra);
-    const outerDashArray = outerTotal > 0 ? `${(Math.max(0, diasPrazo) / outerTotal) * outerCircumference} ${outerCircumference}` : '0 502.65';
+    const outerDashArray = outerTotal > 0
+        ? `${(outerPrimary / outerTotal) * outerCircumference} ${outerCircumference}`
+        : '0 502.65';
     
     // Middle ring: r=60, circumference = 376.99
     const middleCircumference = 2 * Math.PI * 60;
-    const middleDashArray = prazoBase > 0 ? `${(diasUsados / prazoBase) * middleCircumference} ${middleCircumference}` : '0 376.99';
+    const middleDashArray = middleTotal > 0 ? `${(Math.max(0, diasUsados) / middleTotal) * middleCircumference} ${middleCircumference}` : '0 376.99';
     
     // Inner ring: r=42, circumference = 263.89
     const innerCircumference = 2 * Math.PI * 42;
-    const innerDashArray = prazoBase > 0 ? `${(folga / prazoBase) * innerCircumference} ${innerCircumference}` : '0 263.89';
+    const innerTotal = Math.max(0, folga) + 5;
+    const innerDashArray = innerTotal > 0 ? `${(Math.max(0, folga) / innerTotal) * innerCircumference} ${innerCircumference}` : '0 263.89';
     
     // Update SVG circles
     const svg = document.querySelector('.goal-chart');
