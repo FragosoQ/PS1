@@ -1493,7 +1493,7 @@ const updateGoalChart = (diasPrazo, diasPrazoExtra, diasUsados, folga) => {
     const middleColor = middleRatio > outerRatio ? '#FFD700' : (middleRatio === outerRatio ? '#9aa3ad' : '#00a2e8');
     
     // Determine color for inner ring (vermelho se Folga = 0)
-    const innerColor = folga === 0 ? '#FF0000' : '#80a5dc';
+    const innerColor = folga <= 0 ? '#FF0000' : '#80a5dc';
     
     // Calculate dash arrays for each circle (full circle = 2 * PI * r)
     // Outer ring: r=80, circumference = 502.65
