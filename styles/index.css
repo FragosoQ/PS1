@@ -168,11 +168,13 @@ canvas {
 }
 
 .separator-icon {
-    width: 0.9em;
-    height: 0.9em;
     margin-right: 6px;
     vertical-align: middle;
-    object-fit: contain;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95em;
+    line-height: 1;
 }
 
 /* O GRANDE NÚMERO */
