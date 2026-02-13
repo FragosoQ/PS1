@@ -499,7 +499,7 @@
           grid-column: 1 / -1 !important;
           grid-row: 5 / 10 !important;
           grid-template-columns: repeat(2, 1fr) !important;
-          grid-template-rows: 1fr 1fr auto auto 1fr !important;
+          grid-template-rows: auto auto auto auto 1fr !important;
           gap: 6px !important;
           height: 100% !important;
           min-height: 0 !important;
@@ -577,6 +577,18 @@
       
       /* Log operacional com altura responsiva ao conteúdo */
       .info-panel-card-5 {
+          height: auto !important;
+          min-height: fit-content !important;
+      }
+      
+      /* Buffer com altura responsiva ao conteúdo */
+      .info-panel-card-1 {
+          height: auto !important;
+          min-height: fit-content !important;
+      }
+      
+      /* PLANEAMENTO com altura responsiva ao conteúdo */
+      .info-panel-card-2 {
           height: auto !important;
           min-height: fit-content !important;
       }
