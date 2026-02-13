@@ -186,6 +186,7 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
         .style('position', 'relative');
 
     if (cornerText && String(cornerText).trim() !== '') {
+        const cornerLabel = String(cornerText).trim().replace(/,/g, '.');
         main.append('div')
             .attr('class', 'next-priority-label')
             .style('position', 'absolute')
@@ -203,7 +204,7 @@ const drawTextWithDonut = (containerId, text, percentage, textFontSize = 'clamp(
             .style('overflow', 'hidden')
             .style('text-overflow', 'ellipsis')
             .style('white-space', 'nowrap')
-            .html(`<span class="separator-icon material-symbols-outlined" aria-hidden="true">double_arrow</span>${String(cornerText).trim()}`);
+                .html(`<span class="separator-icon material-symbols-outlined" aria-hidden="true">double_arrow</span>${cornerLabel}`);
     }
 
     // Text area
