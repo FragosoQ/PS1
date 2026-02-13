@@ -819,11 +819,22 @@ const drawDonutChart = (containerId, percentage, fillColor) => {
     const width = rect.width;
     const height = rect.height;
 
-    // Calculate size based on available space, but limit to ensure consistency
-    const size = Math.min(Math.min(width, height) - 20, 150);
+    // Detecta mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    // Calculate size based on available space, with minimum for mobile
+    let size;
+    if (isMobile) {
+        // Em mobile, garante tamanho entre 70-110px para melhor visibilidade
+        size = Math.max(70, Math.min(Math.min(width, height) - 8, 110));
+    } else {
+        // Desktop: mantém lógica original
+        size = Math.min(Math.min(width, height) - 20, 150);
+    }
     
     if (size <= 0) {
-        return;
+        console.warn(`⚠️ Chart size invalid: ${size}px (width: ${width}, height: ${height})`);
+        size = 70; // Fallback para garantir que algo aparece
     }
 
     const radius = size / 2;
@@ -902,10 +913,13 @@ const drawDonutChart = (containerId, percentage, fillColor) => {
         .attr('fill', (d, i) => i === 0 ? `url(#fill-gradient-${uniqueId})` : `url(#empty-gradient-${uniqueId})`)
         .attr('stroke', 'none');
 
+    // Texto percentual com tamanho adaptativo
+    const fontSize = isMobile ? `${size * 0.25}px` : '1.8rem';
+    
     svg.append('text')
         .attr('text-anchor', 'middle')
         .attr('dy', '0.35em') 
-        .style('font-size', '1.8rem')
+        .style('font-size', fontSize)
         .style('font-weight', 'bold')
         .style('fill', 'white')
         .text(`${percentage.toFixed(0)}%`);
@@ -925,24 +939,42 @@ const drawMultipleDonutCharts = (containerId, chartsData) => {
     const width = rect.width;
     const height = rect.height;
 
+    // Detecta mobile
+    const isMobile = window.innerWidth <= 768;
+
     // Determine layout based on number of charts
     const isGridLayout = chartsData.length > 2;
     
     let size;
-    if (isGridLayout) {
-        // Grid 2x2: each chart gets a quarter of the space
-        const chartWidth = (width / 2) - 15;
-        const chartHeight = (height / 2) - 15;
-        size = Math.min(chartWidth, chartHeight, 120);
+    if (isMobile) {
+        // Em mobile, tamanhos aumentados para melhor visibilidade
+        if (isGridLayout) {
+            // Grid 2x2: cada chart entre 50-90px
+            const chartWidth = (width / 2) - 6;
+            const chartHeight = (height / 2) - 6;
+            size = Math.max(50, Math.min(chartWidth, chartHeight, 90));
+        } else {
+            // Linear: 1 ou 2 charts maiores
+            const chartWidth = (width / chartsData.length) - 6;
+            const chartHeight = height - 8;
+            size = Math.max(60, Math.min(chartWidth, chartHeight, 100));
+        }
     } else {
-        // Linear layout for 1 or 2 charts
-        const chartWidth = (width / chartsData.length) - 10;
-        const chartHeight = height - 20;
-        size = Math.min(chartWidth, chartHeight, 150);
+        // Desktop: lógica original
+        if (isGridLayout) {
+            const chartWidth = (width / 2) - 15;
+            const chartHeight = (height / 2) - 15;
+            size = Math.min(chartWidth, chartHeight, 120);
+        } else {
+            const chartWidth = (width / chartsData.length) - 10;
+            const chartHeight = height - 20;
+            size = Math.min(chartWidth, chartHeight, 150);
+        }
     }
     
     if (size <= 0) {
-        return;
+        console.warn(`⚠️ Multiple charts size invalid: ${size}px`);
+        size = isMobile ? 50 : 60; // Fallback
     }
 
     const radius = size / 2;
@@ -1039,10 +1071,13 @@ const drawMultipleDonutCharts = (containerId, chartsData) => {
             .attr('fill', (d, i) => i === 0 ? `url(#fill-gradient-${uniqueId})` : `url(#empty-gradient-${uniqueId})`)
             .attr('stroke', 'none');
 
+        // Texto percentual com tamanho adaptativo baseado no size do chart
+        const textSize = isMobile ? `${size * 0.28}px` : '1.8rem';
+        
         svg.append('text')
             .attr('text-anchor', 'middle')
             .attr('dy', '0.35em') 
-            .style('font-size', '1.8rem')
+            .style('font-size', textSize)
             .style('font-weight', 'bold')
             .style('fill', 'white')
             .text(`${percentage.toFixed(0)}%`);

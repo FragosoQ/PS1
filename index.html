@@ -23,6 +23,7 @@
       height: 100vh;
       font-family: 'Open Sans', sans-serif;
       background: radial-gradient(circle, #020d3a, #000000);
+      position: fixed;
     }
     
     body::-webkit-scrollbar, html::-webkit-scrollbar {
@@ -412,65 +413,177 @@
     }
 
     @media (max-width: 768px) {
-      .top-left-logo, .top-right-logo { width: 60px; top: 10px; }
+      body, html {
+        overflow: hidden !important;
+      }
+      
+      .top-left-logo, .top-right-logo { 
+        width: calc(50% - 16px) !important;
+        max-width: 200px !important;
+        height: auto !important;
+        top: 8px !important;
+        z-index: 9998;
+      }
+      
+      .top-left-logo {
+        left: 8px !important;
+      }
+      
+      .top-right-logo {
+        right: 8px !important;
+      }
       
       .destination-card {
-        top: 75px; left: 50%; transform: translateX(-50%);
-        width: 90%; max-width: none;
+        display: none !important;
+      }
+      
+      /* Oculta o ícone WiFi em mobile */
+      #network-status-container {
+        display: none !important;
       }
 
       .grid-container {
-        top: 135px; bottom: auto; right: 10px; left: 10px;
-        width: auto;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: auto;
-        height: auto;
-        gap: 8px;
-        overflow-y: visible; 
+        top: 85px !important;
+        bottom: 10px !important;
+        right: 8px !important;
+        left: 8px !important;
+        width: auto !important;
+        height: auto !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-rows: 1.2fr 1.2fr 1.2fr 1fr 1fr 0.9fr 0.9fr 0.9fr 0.9fr 0.9fr !important;
+        gap: 6px !important;
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
       }
       
-      /* Altura customizável dos cards superiores (CUBA, INTERIOR, etc.) */
+      /* Todos os cards com altura igual preenchendo o grid */
+      .grid-item {
+        min-height: 0 !important;
+        height: 100% !important;
+        padding: 4px !important;
+      }
+      
+      /* Cards com pie charts (1-6) precisam de padding menor */
+      #grid-item-1, #grid-item-2, #grid-item-3,
+      #grid-item-4, #grid-item-5, #grid-item-6 {
+        padding: 3px !important;
+      }
+      
+      /* CRÍTICO: Garante que os containers dos pie charts têm dimensões adequadas */
+      .card-chart {
+        min-width: 90px !important;
+        min-height: 90px !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      
       #grid-item-1, #grid-item-2, #grid-item-3,
       #grid-item-4, #grid-item-5, #grid-item-6,
-      #grid-item-7, #grid-item-8 {
-        min-height: 160px; /* Aumentado para melhor visualização dos pie charts */
+      #grid-item-7, #grid-item-8, #grid-item-9,
+      #grid-item-11 {
+        grid-column: span 1 !important;
+        min-height: 0 !important;
       }
       
-      /* --- CORREÇÃO DO LAYOUT MOBILE --- */
+      /* Reposiciona os itens no grid 2x10 */
+      #grid-item-1 { grid-column: 1; grid-row: 1; }
+      #grid-item-2 { grid-column: 2; grid-row: 1; }
+      #grid-item-3 { display: block !important; grid-column: 1; grid-row: 2; }
+      #grid-item-4 { grid-column: 2; grid-row: 2; }
+      #grid-item-5 { grid-column: 1; grid-row: 3; }
+      #grid-item-6 { display: block !important; grid-column: 2; grid-row: 3; }
+      #grid-item-7 { grid-column: 1 / -1; grid-row: 4; }
+      #grid-item-9 { grid-column: 1; grid-row: 5; }
+      #grid-item-11 { grid-column: 2; grid-row: 5; }
+      
+      /* --- BOTTOM SECTION ocupa as últimas 5 linhas --- */
       .bottom-section { 
-          height: auto; 
-          grid-column: 1 / -1; 
-          
-          /* ALTERAÇÃO: Passa para 2 colunas para a imagem não ficar minúscula */
-          grid-template-columns: repeat(2, 1fr); 
+          display: grid !important;
+          grid-column: 1 / -1 !important;
+          grid-row: 6 / 11 !important;
+          grid-template-columns: repeat(2, 1fr) !important;
+          grid-template-rows: repeat(5, 1fr) !important;
+          gap: 6px !important;
+          height: 100% !important;
+          min-height: 0 !important;
+          max-height: none !important;
       }
+      
+      /* Posiciona os 5 cards do bottom section */
+      .info-panel-card-2 { grid-column: 1 / -1; grid-row: 1 / 3; }
+      .info-panel-card-1 { grid-column: 1; grid-row: 3 / 5; }
+      .info-panel-card-5 { grid-column: 2; grid-row: 3 / 5; }
+      .info-panel-card-3 { grid-column: 1; grid-row: 5; }
+      .info-panel-card-4 { grid-column: 2; grid-row: 5; }
       
       /* Ajuste do card PLANEAMENTO no mobile */
+      .info-panel-card-2 .card-title {
+          font-size: clamp(12px, 3vw, 16px) !important;
+          padding-left: 6px !important;
+      }
+      
       .info-panel-card-2 .info-panel-content-2 {
-          grid-template-columns: 1fr;
-          gap: 6px;
+          grid-template-columns: 1fr !important;
+          gap: 4px !important;
+          padding: 6px !important;
       }
       
-        /* Grid 2x2 no mobile quando houver 3+ slots */
+      /* Grid 2x2 no mobile quando houver 3+ slots */
       .info-panel-content-2.multi-slot {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(2, 1fr) !important;
+          gap: 3px !important;
       }
       
-      /* Ajuste do indicador no mobile para não ficar demasiado grosso */
+      .slot-column {
+          font-size: clamp(8px, 2vw, 11px) !important;
+          padding: 3px !important;
+      }
+      
+      /* Ajustes dos outros cards */
+      .card-title {
+          font-size: clamp(10px, 2.5vw, 14px) !important;
+          margin-bottom: 2px !important;
+      }
+      
+      /* Títulos dos cards com charts ainda menores */
+      #grid-item-1 .card-title,
+      #grid-item-2 .card-title,
+      #grid-item-3 .card-title,
+      #grid-item-4 .card-title,
+      #grid-item-5 .card-title,
+      #grid-item-6 .card-title {
+          font-size: clamp(9px, 2.2vw, 12px) !important;
+          margin-bottom: 1px !important;
+      }
+      
+      .info-panel-card-3 .card-title {
+          font-size: clamp(10px, 2.5vw, 14px) !important;
+      }
+      
+      /* Ajuste do indicador no mobile */
       .status-indicator {
-          width: 6px; /* Ligeiramente mais fino no mobile */
-          right: 3px; /* Mais colado à imagem */
+          width: 5px !important;
+          right: 2px !important;
       }
       
+      /* Chart de goal menor */
+      .goal-chart-container {
+          padding: 2px !important;
+      }
+      
+      /* Log operacional com texto menor */
+      .info-panel-content-5 {
+          font-size: clamp(7px, 1.8vw, 10px) !important;
+          padding: 4px !important;
+          gap: 4px !important;
+      }
+      
+      /* Progress bar fica FORA do grid, no topo */
       .progress-bar-container {
-        position: relative !important;
-        bottom: auto;
-        left: auto;
-        transform: none;
-        width: 100% !important;
-        margin-top: 15px;
-        grid-column: 1 / -1; 
-        pointer-events: auto;
+        display: none !important;
       }
     }
   </style>
