@@ -140,31 +140,13 @@ class Line {
   }
 
   createMaterial() {
-    // Busca a cor baseada no número do Slot
-    let lineColor = config.colors.globeLines; // Cor padrão
-    
-    console.log(`🔍 Creating material for Slot ${this.slotNumber}`);
-    console.log(`📊 chartConfig available:`, typeof chartConfig !== 'undefined');
-    
-    if (typeof chartConfig !== 'undefined' && chartConfig.colors && chartConfig.colors.slotColors) {
-      const colorIndex = this.slotNumber - 1; // Slot_1 = index 0 (azul), Slot_2 = index 1 (cinza), Slot_3 = index 2 (amarelo)
-      console.log(`📊 colorIndex: ${colorIndex}, slotColors length: ${chartConfig.colors.slotColors.length}`);
-      console.log(`📊 Available colors:`, chartConfig.colors.slotColors);
-      
-      if (chartConfig.colors.slotColors[colorIndex]) {
-        lineColor = chartConfig.colors.slotColors[colorIndex];
-        console.log(`🎨 Line color for Slot ${this.slotNumber}: ${lineColor}`);
-      } else {
-        console.warn(`⚠️ No color found for Slot ${this.slotNumber} at index ${colorIndex}`);
-      }
-    } else {
-      console.warn(`⚠️ chartConfig not available or missing slotColors`);
-    }
-    
     return new MeshLineMaterial({
-      color: lineColor,
+      color: '#00a2e8',
       transparent: true,
-      opacity: 0.45
+      opacity: 0.8,
+      lineWidth: 1.6,
+      blending: THREE.AdditiveBlending,
+      depthTest: false
     });
   }
 }
