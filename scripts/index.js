@@ -131,7 +131,7 @@ async function setup(app) {
   }
   
   // POSIÇÕES INICIAIS (Reset)
-  const INITIAL_CAMERA_POS_X = -55;
+  const INITIAL_CAMERA_POS_X = -30;
   const INITIAL_CAMERA_POS_Y = 220;
   const INITIAL_CAMERA_POS_Z = 385;
   const INITIAL_CAMERA_ROT_X = THREE.Math.degToRad(20);

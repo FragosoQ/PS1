@@ -120,9 +120,9 @@ class App {
     // Se for Desktop (>900px), empurramos o globo para a esquerda.
     // Se for Mobile, deixamos no centro.
     if (width > 900) {
-        // width * 0.25 move o centro cerca de 25% para a esquerda.
+        // width * 0.24 move o centro cerca de 24% para a esquerda (movido para a direita).
         // Podes aumentar para 0.3 ou diminuir para 0.15 para ajustar a margem.
-        const offset = width * 0.25; 
+        const offset = width * 0.24; 
         this.camera.setViewOffset(width, height, offset, 0, width, height);
     } else {
         // Mobile: Reset total para o centro
