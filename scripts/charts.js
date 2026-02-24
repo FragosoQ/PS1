@@ -1668,13 +1668,14 @@ const updateInfoPanel = async () => {
     }
     
     // Update status indicator based on CF column (STATUS)
-    const statusValue = (await fetchTextValue('CF', 2)).toUpperCase();
+    const statusValueRaw = await fetchTextValue('CF', 2);
+    const statusValue = String(statusValueRaw || '').trim().toUpperCase();
     const statusIndicator = document.getElementById('status-indicator');
     if (statusIndicator) {
         if (statusValue === 'ON') {
             statusIndicator.src = 'https://static.wixstatic.com/media/a6967f_e69c4b86d193485596b9d3d2d49625c3~mv2.png';
             statusIndicator.alt = 'Status ON';
-        } else if (statusValue === 'OFF') {
+        } else if (statusValue === 'OFF' || statusValue === '') {
             statusIndicator.src = 'https://static.wixstatic.com/media/a6967f_226d67906a30456d92ac9b34c151654a~mv2.png';
             statusIndicator.alt = 'Status OFF';
         }
