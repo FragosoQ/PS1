@@ -319,6 +319,22 @@
       min-width: 0;
     }
 
+    .bottom-section .card-title,
+    .bottom-section .info-line,
+    .bottom-section .buffer-item,
+    .bottom-section .info-panel-content-5,
+    .bottom-section .info-panel-content-5 > div,
+    .bottom-section .slot-column {
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .bottom-section .buffer-item {
+      text-overflow: clip;
+    }
+
     .goal-chart-container {
         display: flex;
         align-items: center;
@@ -876,6 +892,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const gridVideo = document.getElementById('grid-video');
       if (!gridVideo) {
+        initializeBottomSectionAutoFont();
         return;
       }
 
@@ -885,6 +902,68 @@
           gridVideo.play().catch(() => {});
         }
       }, 45000);
+
+      initializeBottomSectionAutoFont();
+
+      function initializeBottomSectionAutoFont() {
+        const bottomSection = document.querySelector('.bottom-section');
+        if (!bottomSection) return;
+
+        const MIN_FONT_SIZE_PX = 7;
+        const selectors = [
+          '.card-title',
+          '.info-line',
+          '.buffer-item',
+          '.info-panel-content-5 > div'
+        ];
+
+        const getElementsToFit = () => {
+          return Array.from(bottomSection.querySelectorAll(selectors.join(','))).filter((el) => {
+            return el.textContent && el.textContent.trim().length > 0;
+          });
+        };
+
+        const fitElementText = (element) => {
+          const computedFontSize = parseFloat(window.getComputedStyle(element).fontSize);
+          const baseFontSize = parseFloat(element.dataset.baseFontSize || computedFontSize);
+          if (!element.dataset.baseFontSize) {
+            element.dataset.baseFontSize = String(baseFontSize);
+          }
+
+          let currentFontSize = baseFontSize;
+          element.style.fontSize = `${currentFontSize}px`;
+          element.style.whiteSpace = 'normal';
+          element.style.overflowWrap = 'anywhere';
+          element.style.wordBreak = 'break-word';
+
+          while (
+            (element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight) &&
+            currentFontSize > MIN_FONT_SIZE_PX
+          ) {
+            currentFontSize -= 0.5;
+            element.style.fontSize = `${currentFontSize}px`;
+          }
+        };
+
+        let rafId = null;
+        const fitAllText = () => {
+          if (rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(() => {
+            getElementsToFit().forEach(fitElementText);
+            rafId = null;
+          });
+        };
+
+        const observer = new MutationObserver(fitAllText);
+        observer.observe(bottomSection, {
+          childList: true,
+          subtree: true,
+          characterData: true
+        });
+
+        window.addEventListener('resize', fitAllText);
+        fitAllText();
+      }
     });
   </script>
 
