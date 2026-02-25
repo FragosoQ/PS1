@@ -426,25 +426,27 @@ async function convertSheetDataToAppFormat(sheetData) {
     destinationCountries.forEach(countryName => {
       const coords = findCountryCoordinates(countryName, countriesDB);
       if (coords) {
+        // Usa o nome ORIGINAL português (em maiúsculas) em vez do nome inglês
+        const displayName = countryName.trim().toUpperCase();
         countries.push({
-          name: coords.name,
+          name: displayName,
           latitude: coords.latitude,
           longitude: coords.longitude
         });
-        normalizedPortugalConnections.push({ country: coords.name, slot: 1 });
-        uniqueCountries.add(coords.name);
+        normalizedPortugalConnections.push({ country: displayName, slot: 1 });
+        uniqueCountries.add(displayName);
       } else {
         console.warn(`⚠️ País não encontrado no banco de dados: ${countryName}`);
       }
     });
     
     // Garante que Portugal está na lista (origem)
-    const hasPortugal = countries.some(c => c.name === 'Portugal');
+    const hasPortugal = countries.some(c => c.name === 'PORTUGAL');
     if (!hasPortugal) {
       const portugalCoords = findCountryCoordinates('Portugal', countriesDB);
       if (portugalCoords) {
         countries.push({
-          name: portugalCoords.name,
+          name: 'PORTUGAL',
           latitude: portugalCoords.latitude,
           longitude: portugalCoords.longitude
         });

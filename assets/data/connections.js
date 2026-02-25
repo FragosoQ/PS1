@@ -145,7 +145,11 @@ const loadConnectionsFromPSMulti = async () => {
                     const country = cell ? cell.v : null;
                     if (country && String(country).trim() !== '') {
                         const normalized = normalizeCountryName(country);
-                        destinationCountries.push({ country: normalized, slot: slotNumber });
+                        destinationCountries.push({ 
+                            country: normalized, 
+                            originalName: String(country).trim().toUpperCase(), // Nome original para exibição
+                            slot: slotNumber 
+                        });
                         console.log(`🗺️ País: "${country}" → "${normalized}" (Slot ${slotNumber})`);
                     }
                 });

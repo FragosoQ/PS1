@@ -763,8 +763,7 @@ const updateDestination = async () => {
         destinationTitle.innerHTML = uniqueCountries
             .map(countryData => {
                 const slotClass = countryData.slotNumber === 2 ? ' slot2' : '';
-                const englishName = mapCountryToEnglish(countryData.name);
-                return `<span class="country-tag${slotClass}">${englishName}</span>`;
+                return `<span class="country-tag${slotClass}">${countryData.name}</span>`;
             })
             .join('');
         console.log('Destination card updated with unique countries:', uniqueCountries);

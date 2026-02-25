@@ -38,11 +38,14 @@ class Marker {
     // Check if this is one of the destinations
     let isDestination = false;
     if (data.connections && data.connections.Portugal) {
-      isDestination = data.connections.Portugal.some(dest => {
+      const dest = data.connections.Portugal.find(dest => {
         // Suporta formato antigo (string) e novo (objeto com country e slot)
         const destCountry = typeof dest === 'string' ? dest : dest.country;
         return destCountry.toUpperCase() === countryUpper;
       });
+      if (dest) {
+        isDestination = true;
+      }
     }
     
     // Only create label if Portugal or a destination
@@ -51,33 +54,28 @@ class Marker {
       return;
     }
 
-    // Abreviaturas para países com nomes extensos
+    // Abreviaturas para países com nomes extensos em português
     const countryAbbreviations = {
-      'UNITED STATES': 'USA',
-      'UNITED KINGDOM': 'UK',
-      'UK': 'UK',
-      'ENGLAND': 'UK',
       'INGLATERRA': 'UK',
-      'SOUTH AFRICA': 'SOUTH AFRICA',
-      'SAUDI ARABIA': 'SAUDI ARABIA',
-      'UNITED ARAB EMIRATES': 'UAE',
-      'DOMINICAN REPUBLIC': 'DOM. REP.',
-      'CZECH REPUBLIC': 'CZECHIA',
-      'CENTRAL AFRICAN REPUBLIC': 'C.A.R.',
-      'BOSNIA AND HERZEGOVINA': 'BOSNIA',
-      'TRINIDAD AND TOBAGO': 'TRINIDAD',
-      'ANTIGUA AND BARBUDA': 'ANTIGUA',
-      'ST. VINCENT AND THE GRENADINES': 'ST. VINCENT',
-      'SAO TOME AND PRINCIPE': 'SAO TOME',
-      'EQUATORIAL GUINEA': 'EQ. GUINEA',
-      'PAPUA NEW GUINEA': 'PAPUA N.G.',
-      'NORTH MACEDONIA': 'MACEDONIA',
-      'MACAO SAR, CHINA': 'MACAU',
-      'HONG KONG SAR, CHINA': 'HONG KONG'
+      'REINO UNIDO': 'UK',
+      'ESTADOS UNIDOS': 'EUA',
+      'EUA': 'EUA',
+      'REPÚBLICA DOMINICANA': 'REP. DOM.',
+      'REP. DOMINICANA': 'REP. DOM.',
+      'ARÁBIA SAUDITA': 'ARÁBIA SAUDITA',
+      'EMIRADOS ÁRABES UNIDOS': 'EAU',
+      'BÓSNIA E HERZEGOVINA': 'BÓSNIA',
+      'REPÚBLICA CHECA': 'CHÉQUIA',
+      'CHÉQUIA': 'CHÉQUIA',
+      'HONG KONG SAR, CHINA': 'HONG KONG',
+      'MACAO SAR, CHINA': 'MACAU'
     };
     
-    // Use abbreviation if available, otherwise use original name
-    const displayName = countryAbbreviations[countryUpper] || this.labelText;
+    // Usa sempre o labelText que vem do countries.js (em português)
+    const nameForDisplay = this.labelText;
+    
+    // Use abbreviation if available, otherwise use the name
+    const displayName = countryAbbreviations[nameForDisplay.toUpperCase()] || nameForDisplay;
 
     const text = this.createText(displayName);
     const texture = new THREE.Texture(text);
