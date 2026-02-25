@@ -1635,7 +1635,7 @@ const updateInfoPanel = async () => {
                 const slotData = planningData.slots[0];
                 infoPanelCard2.innerHTML = `
                     <div class="slot-column">
-                        <div class="info-line">Lote: ${slotData.lote}</div>
+                        <div class="info-line">${slotData.lote}</div>
                         <div class="info-line">Qtd: ${slotData.quantidade}</div>
                         <div class="info-line">${slotData.dataPretendida}</div>
                     </div>
@@ -1652,7 +1652,7 @@ const updateInfoPanel = async () => {
                 const slotsHtml = planningData.slots.map(slotData => {
                     return `
                         <div class="slot-column">
-                            <div class="info-line">Lote: ${slotData.lote}</div>
+                            <div class="info-line">${slotData.lote}</div>
                             <div class="info-line">Qtd: ${slotData.quantidade}</div>
                             <div class="info-line">${slotData.dataPretendida}</div>
                         </div>
