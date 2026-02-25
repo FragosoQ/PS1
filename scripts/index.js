@@ -7,6 +7,11 @@ const app = new App({ setup, animate, preload });
 window.onload = app.init;
 window.onresize = app.handleResize;
 
+// Auto-refresh da página a cada 60 minutos
+setInterval(() => {
+  location.reload();
+}, 3600000); // 60 minutos = 3600000 milissegundos
+
 // Robust logo opener: attach early so clicks work before GUI exists.
 (function setupLogoOpener(){
   let pendingOpen = false;

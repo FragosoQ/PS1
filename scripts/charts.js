@@ -1731,6 +1731,125 @@ const updateInfoPanel = async () => {
 };
 
 /**
+ * Creates a snapshot of current chart data from Google Sheets
+ * @returns {Promise<Object>} Snapshot object with all relevant data
+ */
+const createDataSnapshot = async () => {
+    try {
+        const slots = await fetchAllSlotsData();
+        const snapshot = {
+            slots: slots.map(s => ({ ...s })),
+            chartData: {}
+        };
+        
+        // Captura dados de todas as colunas dos charts
+        const columns = ['O', 'Q', 'R', 'P', 'CI', 'CG', 'AK'];
+        
+        for (const column of columns) {
+            if (column === 'CI') {
+                // Para CI, captura valores de texto
+                const ciRows = await fetchColumnValuesWithRowIndex(column);
+                snapshot.chartData[column] = ciRows.map(item => ({ 
+                    rowIndex: item.rowIndex, 
+                    value: item.value 
+                }));
+            } else if (column === 'AK') {
+                // Para AK (GERAL), captura percentagens
+                const akRows = await fetchColumnValuesWithRowIndex(column);
+                snapshot.chartData[column] = akRows.map(item => ({ 
+                    rowIndex: item.rowIndex, 
+                    value: parsePercentageValue(item.value) 
+                }));
+            } else {
+                // Para outras colunas, captura percentagens de cada slot
+                snapshot.chartData[column] = [];
+                for (const slot of slots) {
+                    const percentage = await fetchPercentage(column, slot.rowIndex);
+                    snapshot.chartData[column].push({
+                        rowIndex: slot.rowIndex,
+                        value: percentage
+                    });
+                }
+            }
+        }
+        
+        return snapshot;
+    } catch (error) {
+        console.error('Error creating data snapshot:', error);
+        return null;
+    }
+};
+
+/**
+ * Compares two data snapshots to detect changes
+ * @param {Object} oldSnapshot - Previous snapshot
+ * @param {Object} newSnapshot - Current snapshot
+ * @returns {boolean} True if data has changed
+ */
+const hasDataChanged = (oldSnapshot, newSnapshot) => {
+    if (!oldSnapshot || !newSnapshot) return true;
+    
+    // Compara número de slots
+    if (oldSnapshot.slots.length !== newSnapshot.slots.length) {
+        return true;
+    }
+    
+    // Compara dados dos charts
+    const columns = Object.keys(newSnapshot.chartData);
+    for (const column of columns) {
+        const oldData = oldSnapshot.chartData[column] || [];
+        const newData = newSnapshot.chartData[column] || [];
+        
+        if (oldData.length !== newData.length) {
+            return true;
+        }
+        
+        for (let i = 0; i < newData.length; i++) {
+            if (oldData[i]?.value !== newData[i]?.value) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+};
+
+/**
+ * Monitors Google Sheets for changes and auto-updates charts
+ * Checks every 30 seconds
+ */
+let currentSnapshot = null;
+
+const monitorSheetsChanges = async () => {
+    try {
+        const newSnapshot = await createDataSnapshot();
+        
+        if (hasDataChanged(currentSnapshot, newSnapshot)) {
+            console.log('📊 Mudanças detectadas nos dados do Google Sheets - Atualizando charts...');
+            await updateAllCharts();
+            await updateEvoProgress();
+            currentSnapshot = newSnapshot;
+            console.log('✅ Charts atualizados com sucesso!');
+        }
+    } catch (error) {
+        console.error('Error monitoring sheets changes:', error);
+    }
+};
+
+/**
+ * Initializes auto-refresh functionality for charts
+ */
+const initAutoRefresh = async () => {
+    // Cria snapshot inicial
+    currentSnapshot = await createDataSnapshot();
+    
+    // Monitora mudanças a cada 30 segundos
+    setInterval(monitorSheetsChanges, 30000);
+    
+    console.log('🔄 Auto-refresh de charts ativado (verifica mudanças a cada 30 segundos)');
+};
+
+/**
  * Initializes progress bar
  */
 const initProgressBar = () => {
@@ -1746,10 +1865,14 @@ if (document.readyState === 'loading') {
         initProgressBar();
         await updateDestination();
         updateInfoPanel();
+        await initAutoRefresh();
     });
 } else {
-    initCharts();
-    initProgressBar();
-    updateDestination();
-    updateInfoPanel();
+    (async () => {
+        initCharts();
+        initProgressBar();
+        updateDestination();
+        updateInfoPanel();
+        await initAutoRefresh();
+    })();
 }
