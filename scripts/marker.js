@@ -77,8 +77,8 @@ class Marker {
     // Use abbreviation if available, otherwise use the name
     const displayName = countryAbbreviations[nameForDisplay.toUpperCase()] || nameForDisplay;
 
-    const text = this.createText(displayName);
-    const texture = new THREE.Texture(text);
+    const textResult = this.createText(displayName);
+    const texture = new THREE.Texture(textResult.canvas);
     texture.minFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
     textures.markerLabels.push(texture);
@@ -89,7 +89,12 @@ class Marker {
     material.useScreenCoordinates = false;
 
     this.label = new THREE.Sprite(material);
-    this.label.scale.set( 40, 20, 1 );
+    // Adjust scale based on canvas dimensions while maintaining aspect ratio
+    const aspectRatio = textResult.width / textResult.height;
+    const baseScale = 11; // Base height scale (reduced by 30% from 16)
+    const scaleY = baseScale;
+    const scaleX = baseScale * aspectRatio;
+    this.label.scale.set( scaleX, scaleY, 1 );
     this.label.center.x = 0.5;
     this.label.translateY(2);
     this.label.renderOrder = 999;
@@ -143,34 +148,58 @@ class Marker {
 
   createText(labelText = this.labelText) {
     const element = document.createElement('canvas');
-    const canvas = new fabric.Canvas(element);
+    
+    // Use consistent font size for all labels
+    const fontSize = 54;
+    const padding = 8;
+
+    // Create temporary text to measure dimensions
+    const tempCanvas = new fabric.StaticCanvas(null);
+    const tempText = new fabric.Text(labelText, {
+      fontFamily: 'Open Sans',
+      fontSize: fontSize
+    });
+    
+    const textWidth = tempText.width;
+    const textHeight = tempText.height;
+    const canvasWidth = textWidth + padding * 2;
+    const canvasHeight = textHeight + padding * 2;
+
+    // Set canvas dimensions
+    element.width = canvasWidth;
+    element.height = canvasHeight;
+    
+    const canvas = new fabric.Canvas(element, {
+      width: canvasWidth,
+      height: canvasHeight
+    });
 
     const text = new fabric.Text(labelText, {
-      left: 10, 
-      top: 5, 
+      left: padding, 
+      top: padding, 
       fill: 'black', 
       fontFamily: 'Open Sans',
-      fontSize: 54
+      fontSize: fontSize
     });
 
     // Create a rounded rectangle background
-    const padding = 8;
     const rect = new fabric.Rect({
       left: 0,
       top: 0,
-      width: text.width + padding * 2,
-      height: text.height + padding * 2,
+      width: canvasWidth,
+      height: canvasHeight,
       fill: 'rgba(255, 255, 255, 0.85)',
       rx: 8,
       ry: 8
     });
 
-    // Position text with padding
-    text.left = padding;
-    text.top = padding;
-
     canvas.add(rect);
     canvas.add(text);
-    return element;
+    
+    return {
+      canvas: element,
+      width: canvasWidth,
+      height: canvasHeight
+    };
   }
 }
