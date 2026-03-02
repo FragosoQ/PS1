@@ -3,13 +3,15 @@ class Marker {
     textColor = 'white',
     pointColor = config.colors.globeMarkerColor,
     glowColor = config.colors.globeMarkerGlow,
-    countryName = ''
+    countryName = '',
+    labelOffset = 2
   } = {}) {
     this.material = material;
     this.geometry = geometry;
     this.labelText = label;
     this.cords = cords;
     this.countryName = countryName;
+    this.labelOffset = labelOffset;
 
     this.isAnimating = false;
 
@@ -86,6 +88,7 @@ class Marker {
     const material = new THREE.SpriteMaterial()
     material.map = texture;
     material.depthTest = false;
+    material.depthWrite = false;
     material.useScreenCoordinates = false;
 
     this.label = new THREE.Sprite(material);
@@ -96,8 +99,8 @@ class Marker {
     const scaleX = baseScale * aspectRatio;
     this.label.scale.set( scaleX, scaleY, 1 );
     this.label.center.x = 0.5;
-    this.label.translateY(2);
-    this.label.renderOrder = 999;
+    this.label.translateY(this.labelOffset);
+    this.label.renderOrder = 10000; // Very high render order to ensure labels always render on top
 
     this.group.add(this.label);
     elements.markerLabel.push(this.label);
