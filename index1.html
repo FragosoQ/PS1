@@ -127,6 +127,44 @@ header {
   white-space: nowrap;
 }
 
+.h-priority {
+  position: absolute;
+  top: clamp(8px, 1.4vh, 14px);
+  right: clamp(10px, 1.5vw, 18px);
+  z-index: 3;
+  display: flex; flex-direction: column; align-items: flex-end;
+  line-height: 1.05;
+  padding: 4px 10px;
+  border-left: 2px solid rgba(255, 255, 255, 0.5);
+  border-right: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}
+.h-priority-label {
+  font-size: clamp(9px, 1.2vh, 12px);
+  font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+.h-priority-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(14px, 2.2vh, 22px);
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+.h-priority.is-empty .h-priority-value {
+  color: rgba(255,255,255,0.4);
+  text-shadow: none;
+}
+
+/* Variante esquerda: posicionada no canto superior esquerdo */
+.h-priority-left {
+  right: auto;
+  left: clamp(10px, 1.5vw, 18px);
+  align-items: flex-start;
+}
+
 /* ══════════════════════════════════════
    MAIN
 ══════════════════════════════════════ */
@@ -272,6 +310,31 @@ main {
   color: rgba(255,255,255,0.8); text-transform: uppercase;
 }
 
+/* Modo grid 2x2 quando há mais do que um país */
+.id-pais.is-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(6px, 1vh, 12px) clamp(14px, 2vw, 28px);
+  align-items: center;
+}
+.id-pais-cell {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.8vw, 10px);
+  min-width: 0;
+}
+.id-pais-cell .id-flag {
+  font-size: clamp(20px, 3vh, 36px);
+  flex-shrink: 0;
+}
+.id-pais-cell .id-pais-info {
+  font-size: clamp(14px, 2vh, 24px);
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* BOTTOM LEFT — ZONAS
    Paddings e fontes agora fluidos para garantir que cabem sempre.
 */
@@ -386,6 +449,32 @@ main {
   font-size: clamp(12px, 1.5vh, 16px);
   color: rgba(255,255,255,0.35);
   font-style: italic;
+}
+
+/* Variante: card com um único valor centrado (ex: Próxima Prioridade) */
+.zona-card.single {
+  justify-content: space-between;
+}
+.zona-card-single-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(28px, 5vh, 56px);
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+  line-height: 1;
+  padding: 0 4px;
+  min-height: 0;
+  text-align: center;
+  word-break: break-word;
+}
+.zona-card.single.empty .zona-card-single-value {
+  color: rgba(255,255,255,0.35);
+  text-shadow: none;
+  font-size: clamp(20px, 3vh, 32px);
 }
 
 /* ══════════════════════════════════════
@@ -515,9 +604,6 @@ footer {
 .f-status { font-size: clamp(12px, 1.6vh, 16px); font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--green); white-space: nowrap; }
 .f-op-label { font-size: clamp(11px, 1.4vh, 14px); letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.75); white-space: nowrap; }
 .f-op { font-size: clamp(16px, 2vh, 22px); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #fff; white-space: nowrap; }
-
-.f-center { text-align: center; flex-shrink: 1; min-width: 0; }
-.f-nserie { font-size: clamp(13px, 1.8vh, 18px); letter-spacing: 3px; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .f-right { text-align: right; flex-shrink: 0; }
 .f-date  { font-size: clamp(13px, 1.8vh, 18px); letter-spacing: 2px; color: rgba(255,255,255,0.85); white-space: nowrap; }
@@ -696,11 +782,9 @@ footer {
     </div>
 
     <div class="h-center">
-      <span class="h-badge">Montagem</span>
+      <span class="h-badge">Soldadura</span>
       <div class="h-sep"></div>
       <span class="h-badge">Posto 1</span>
-      <div class="h-sep"></div>
-      <span class="h-op">OP_149_2026</span>
     </div>
 
     <span class="h-time" id="htime">—</span>
@@ -745,7 +829,11 @@ footer {
     <div class="right">
 
       <!-- EVOLUÇÃO -->
-      <div class="globe-section" style="flex-direction:column;gap:clamp(6px,1vh,10px);">
+      <div class="globe-section" style="flex-direction:column;gap:clamp(6px,1vh,10px);position:relative;">
+        <div class="h-priority h-priority-left" id="prioridadeAtiva">
+          <span class="h-priority-label">Prioridade Ativa</span>
+          <span class="h-priority-value" id="prioridadeAtivaValue">—</span>
+        </div>
         <div style="font-size:clamp(14px,1.8vh,20px);font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.75);">Evolução Global</div>
         <div id="evNum" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(140px,22vh,340px);line-height:.85;letter-spacing:-2px;">46%</div>
         <div id="statusLabel" style="font-size:clamp(15px,2vh,22px);letter-spacing:4px;color:rgba(255,255,255,0.75);text-transform:uppercase;">Em Curso · ON</div>
@@ -789,12 +877,9 @@ footer {
     <div class="f-left">
       <div class="f-dot"></div>
       <span class="f-status">Em Curso</span>
-      <span style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 8px;flex-shrink:0;"></span>
-      <span class="f-op-label">Operador</span>
-      <span class="f-op">Richard · Diogo</span>
-    </div>
-    <div class="f-center">
-      <div class="f-nserie">SWCG02003025</div>
+      <span class="f-op-divider" style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 8px;flex-shrink:0;display:none;"></span>
+      <span class="f-op-label" style="display:none;">Operador</span>
+      <span class="f-op" style="display:none;">Richard · Diogo</span>
     </div>
     <div class="f-right">
       <div class="f-date" id="fdate">—</div>
@@ -1405,16 +1490,13 @@ const LOTE_FALLBACK = loteEl ? loteEl.textContent.trim() : 'Lote · 26L_1';
 const paisInfoEl = document.querySelector('.id-pais-info');
 const PAIS_INFO_FALLBACK = paisInfoEl ? paisInfoEl.textContent.trim() : 'Peru · EN';
 const flagEl = document.querySelector('.id-flag');
+const paisContainerEl = document.querySelector('.id-pais');
 const operadorEl = document.querySelector('.f-op');
 const OPERADOR_FALLBACK = operadorEl ? operadorEl.textContent.trim() : 'Richard · Diogo';
-const nserieEl = document.querySelector('.f-nserie');
-const NSERIE_FALLBACK = nserieEl ? nserieEl.textContent.trim() : 'SWCG02003025';
 const dataInicioEl = document.querySelectorAll('.d-v')[0];
 const DATA_INICIO_FALLBACK = dataInicioEl ? dataInicioEl.textContent.trim() : '14 / 04 / 2026';
 const dataPrevistaEl = document.querySelectorAll('.d-v')[1];
 const DATA_PREVISTA_FALLBACK = dataPrevistaEl ? dataPrevistaEl.textContent.trim() : '22 / 04 / 2026';
-const ordProdEl = document.querySelector('.h-op');
-const ORD_PROD_FALLBACK = ordProdEl ? ordProdEl.textContent.trim() : 'OP_149_2026';
 const folgaEl = document.getElementById('folgaSpan');
 const prazoUsedEl = document.getElementById('prazoUsed');
 const prazoBarEl = document.getElementById('prazoBar');
@@ -1439,7 +1521,6 @@ const ZONA_CONFIGS = [
   {
     nome: 'Histórico',
     type: 'list',
-    tall: true,
     listSource: {
       tab: 'PS1',
       mode: 'row-headers',
@@ -1452,6 +1533,15 @@ const ZONA_CONFIGS = [
   },
   { nome: 'Envolventes', header: 'ENVOLVENTES', column: 'AD' },
   { nome: 'Interior', header: 'INTERIOR', column: 'AC' },
+  {
+    nome: 'Próxima Prioridade',
+    type: 'single',
+    singleSource: {
+      tab: 'PS1',
+      header: 'Próxima Prioridade',
+      column: 'CH',
+    },
+  },
 ];
 
 // Cache simples para a lista de lotes — partilhado pelo refresh periódico
@@ -1653,6 +1743,17 @@ function buildZonaListCard(config, items) {
   return card;
 }
 
+function buildZonaSingleCard(config, value) {
+  const txt = value != null && String(value).trim() !== '' ? String(value).trim() : null;
+  const cls = txt ? 'going' : 'empty';
+  const card = document.createElement('div');
+  card.className = `zona-card single ${cls}${config.tall ? ' tall' : ''}`;
+  card.innerHTML = `
+    <div class="zona-card-label">${escapeHtml(config.nome)}</div>
+    <div class="zona-card-single-value">${escapeHtml(txt || '—')}</div>`;
+  return card;
+}
+
 function renderZones(rowData) {
   zg.innerHTML = '';
   ZONA_CONFIGS.forEach(config => {
@@ -1672,6 +1773,20 @@ function renderZones(rowData) {
           card.replaceWith(fresh);
         })
         .catch(err => console.warn(`Falha a carregar lista para "${config.nome}":`, err));
+    } else if (config.type === 'single') {
+      const src = config.singleSource || {};
+      const cacheKey = `single|${src.tab}|${src.column || src.header}`;
+      const cached = ZONA_LIST_CACHE[cacheKey];
+      const card = buildZonaSingleCard(config, cached);
+      zg.appendChild(card);
+
+      fetchSecondaryRowFields(src.tab, {
+        v: { header: src.header, column: src.column },
+      }).then(({ v }) => {
+        ZONA_LIST_CACHE[cacheKey] = v;
+        const fresh = buildZonaSingleCard(config, v);
+        card.replaceWith(fresh);
+      }).catch(err => console.warn(`Falha a carregar valor para "${config.nome}":`, err));
     } else {
       zg.appendChild(buildZonaPctCard(config, rowData));
     }
@@ -1762,13 +1877,47 @@ function renderSheetData(sheetRow) {
 
   // Modelo e Lote vêm do PS1!D (mais abaixo, no fetch ao PS1)
 
-  // País + Idioma vêm de montagemEditável!L22:L25 e M22:M25 (várias entradas)
+  // Helper: aplicar estado "vazio" (volta ao layout single com placeholder)
+  function setPaisEmpty() {
+    if (!paisContainerEl) return;
+    paisContainerEl.classList.remove('is-grid');
+    paisContainerEl.innerHTML = `
+      <span class="id-flag"></span>
+      <span class="id-pais-info">${PAIS_PLACEHOLDER}</span>`;
+  }
+
+  // Helper: aplicar estado "single" (1 par país/idioma)
+  function setPaisSingle(pais, idioma) {
+    if (!paisContainerEl) return;
+    paisContainerEl.classList.remove('is-grid');
+    const flag = getCountryFlag(pais) || '';
+    const idiomaTxt = idioma ? idioma.toUpperCase() : '—';
+    paisContainerEl.innerHTML = `
+      <span class="id-flag">${escapeHtml(flag)}</span>
+      <span class="id-pais-info">${escapeHtml(pais.toUpperCase())} · ${escapeHtml(idiomaTxt)}</span>`;
+  }
+
+  // Helper: aplicar estado "grid 2x2"
+  function setPaisGrid(pares) {
+    if (!paisContainerEl) return;
+    paisContainerEl.classList.add('is-grid');
+    paisContainerEl.innerHTML = pares.slice(0, 4).map(p => {
+      const flag = getCountryFlag(p.pais) || '';
+      const idiomaTxt = p.idioma ? p.idioma.toUpperCase() : '—';
+      return `
+        <div class="id-pais-cell">
+          <span class="id-flag">${escapeHtml(flag)}</span>
+          <span class="id-pais-info">${escapeHtml(p.pais.toUpperCase())} · ${escapeHtml(idiomaTxt)}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // País + Idioma vêm de montagemEditável!L2:L6 e M2:M6 (várias entradas)
   const PAIS_PLACEHOLDER = '- · -';
   fetchSecondaryRowsRange('montagemEditável', {
     pais: { header: 'PAÍS', column: 'L' },
     idioma: { header: 'IDIOMA', column: 'M' },
   }, 2, 6).then(rows => {
-    // Manter só linhas com país preenchido
     const valid = rows
       .map(r => ({
         pais: r.pais != null ? String(r.pais).trim() : '',
@@ -1777,36 +1926,42 @@ function renderSheetData(sheetRow) {
       .filter(r => r.pais !== '');
 
     if (valid.length === 0) {
-      renderText(paisInfoEl, PAIS_PLACEHOLDER, PAIS_PLACEHOLDER);
-      if (flagEl) flagEl.textContent = '';
+      setPaisEmpty();
       return;
     }
 
-    const paisesStr = valid.map(r => r.pais.toUpperCase()).join(', ');
-    const idiomasStr = valid
-      .map(r => r.idioma ? r.idioma.toUpperCase() : '—')
-      .join(', ');
-    const flagsStr = valid.map(r => getCountryFlag(r.pais) || '').join('');
+    // Ordenação alfabética pelo nome do país (locale PT, insensível a acentos/maiúsculas)
+    valid.sort((a, b) => a.pais.localeCompare(b.pais, 'pt', { sensitivity: 'base' }));
 
-    renderText(paisInfoEl, `${paisesStr} · ${idiomasStr}`, PAIS_PLACEHOLDER);
-    if (flagEl) flagEl.textContent = flagsStr;
+    if (valid.length === 1) {
+      setPaisSingle(valid[0].pais, valid[0].idioma);
+    } else {
+      setPaisGrid(valid);
+    }
 
-    // O globo só aceita um país de cada vez — usa o primeiro
+    // O globo só aceita um país de cada vez — usa o primeiro (alfabeticamente)
     if (typeof updateGlobeDestination === 'function') {
       updateGlobeDestination(valid[0].pais);
     }
   }).catch(err => {
     console.warn('Falha a carregar países do montagemEditável:', err);
-    renderText(paisInfoEl, PAIS_PLACEHOLDER, PAIS_PLACEHOLDER);
-    if (flagEl) flagEl.textContent = '';
+    setPaisEmpty();
   });
 
   renderText(operadorEl, getFieldValue(sheetRow, 'OPERADOR', 'AH', OPERADOR_FALLBACK), OPERADOR_FALLBACK);
-  renderText(nserieEl, getFieldValue(sheetRow, 'N. SÉRIE', 'X', NSERIE_FALLBACK), NSERIE_FALLBACK);
 
   // Datas + Modelo/Lote vindos do PS1
   const DATE_PLACEHOLDER = '-- / -- / ----';
   const MODEL_PLACEHOLDER = '—';
+
+  // Atualiza o badge "Prioridade Ativa" no canto superior esquerdo
+  const ativaBox = document.getElementById('prioridadeAtiva');
+  const ativaValueEl = document.getElementById('prioridadeAtivaValue');
+  function setPrioridadeAtiva(value) {
+    const txt = value != null && String(value).trim() !== '' ? String(value).trim() : null;
+    if (ativaValueEl) ativaValueEl.textContent = txt || '—';
+    if (ativaBox) ativaBox.classList.toggle('is-empty', !txt);
+  }
 
   // Separa "MWS500 SDS - 87L" → { modelo: "MWS500 SDS", lote: "87L" }.
   // Se não terminar em "<2 dígitos>L", devolve { modelo: <string toda>, lote: null }.
@@ -1825,7 +1980,8 @@ function renderSheetData(sheetRow) {
     inicio: { header: 'INÍCIO SOLDADURA / ACABAMENTO', column: 'J' },
     previsto: { header: 'DATA PRETENDIDA', column: 'F' },
     modeloLote: { header: 'D', column: 'D' },
-  }).then(({ inicio, previsto, modeloLote }) => {
+    prioridadeAtiva: { header: 'Posto 1', column: 'CI' },
+  }).then(({ inicio, previsto, modeloLote, prioridadeAtiva }) => {
     const inicioFmt = inicio != null && String(inicio).trim() !== ''
       ? formatSheetDate(inicio) || DATE_PLACEHOLDER
       : DATE_PLACEHOLDER;
@@ -1843,6 +1999,8 @@ function renderSheetData(sheetRow) {
         ? `Lote &nbsp;·&nbsp; ${escapeHtml(lote)}`
         : 'Sem Lote';
     }
+
+    setPrioridadeAtiva(prioridadeAtiva);
   }).catch(err => {
     console.warn('Falha a carregar dados do PS1:', err);
     renderText(dataInicioEl, DATE_PLACEHOLDER, DATE_PLACEHOLDER);
@@ -1852,9 +2010,8 @@ function renderSheetData(sheetRow) {
     if (loteEl) {
       loteEl.innerHTML = 'Sem Lote';
     }
+    setPrioridadeAtiva(null);
   });
-
-  renderText(ordProdEl, getFieldValue(sheetRow, 'ORD. PROD.', 'I', ORD_PROD_FALLBACK), ORD_PROD_FALLBACK);
 
   updateStatus(sheetRow);
   renderZones(sheetRow);
