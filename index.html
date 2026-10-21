@@ -647,9 +647,9 @@ main {
   border-radius: 6px 6px 0 0;
 }
 .prazo-hours {
+  display: none;
   margin-top: clamp(8px, 1.1vh, 12px);
 }
-.prazo-hours[hidden] { display: none; }
 .prazo-hours-track {
   height: 5px;
   overflow: hidden;
@@ -2530,7 +2530,8 @@ function updateDeadline(startValue, dueValue, startTimeValue) {
   }
 
   const ratio = total > 0 ? Math.min(1, used / total) : 0;
-  const pc = ratio >= .9 ? '#ff3b3b' : ratio >= .7 ? '#ffaa00' : '#00ff87';
+  const isOverdue = used > total;
+  const pc = isOverdue ? '#ff3b3b' : ratio >= .7 ? '#ffaa00' : '#00ff87';
 
   if (prazoUsedEl) {
     prazoUsedEl.textContent = used;
@@ -2545,7 +2546,7 @@ function updateDeadline(startValue, dueValue, startTimeValue) {
   renderDeadlineHours();
   if (folgaEl) {
     folgaEl.textContent = `${remaining} dias restantes`;
-    folgaEl.style.color = remaining <= 1 ? '#ff3b3b' : remaining <= 3 ? '#ffaa00' : '#00ff87';
+    folgaEl.style.color = isOverdue ? '#ff3b3b' : remaining <= 3 ? '#ffaa00' : '#00ff87';
   }
   if (prazoTotalEl) {
     prazoTotalEl.textContent = total;
