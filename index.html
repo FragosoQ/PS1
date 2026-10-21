@@ -2744,6 +2744,104 @@ function getPs1ActivePriorityPercentage(table, row, activePriority) {
   return null;
 }
 
+// Prioridades 0,1 e 0,2: o progresso é calculado pelo tempo decorrido.
+// início = DX2/DY2, duração estimada = EX2/EY2, conclusão = AM2/AO2 (% da prioridade).
+const TIMED_PRIORITIES = {
+  '0.1': { start: 'DX', duration: 'EX', done: 'AM' },
+  '0.2': { start: 'DY', duration: 'EY', done: 'AO' },
+};
+
+function getTimedPriorityKey(prioridade) {
+  const n = Number(String(prioridade == null ? '' : prioridade).trim().replace(',', '.'));
+  if (!Number.isFinite(n)) return null;
+  const key = n.toFixed(1);
+  return TIMED_PRIORITIES[key] ? key : null;
+}
+
+// Hora de início → Date. Formato normal: "2026/10/21 16:04:01". Aceita também "09:30:00", "Date(y,m,d,h,mi,s)",
+// [h,mi,s] (timeofday), "14:00" ou fração do dia.
+// Se só houver hora, assume o dia de hoje.
+function parsePriorityStart(value, now = new Date()) {
+  if (value == null || String(value).trim() === '') return null;
+  const atToday = (h, mi, sec) => {
+    const d = new Date(now);
+    d.setHours(h, mi, sec || 0, 0);
+    return d;
+  };
+  if (Array.isArray(value)) return atToday(Number(value[0]) || 0, Number(value[1]) || 0, Number(value[2]) || 0);
+  if (typeof value === 'number') {
+    if (value >= 0 && value < 1) return atToday(0, Math.round(value * 24 * 60), 0);
+    return null;
+  }
+  const text = String(value).trim();
+  const dt = text.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+)(?:,(\d+))?)?\)$/);
+  if (dt) {
+    const [, y, m, d, h, mi, sec] = dt.map(Number);
+    if (y < 1900) return atToday(h || 0, mi || 0, sec || 0); // só hora (base 1899-12-30)
+    return new Date(y, m, d, h || 0, mi || 0, sec || 0);
+  }
+  const iso = text.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})[\sT]+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (iso) {
+    const [, y, m, d, h, mi, sec] = iso.map(Number);
+    return new Date(y, m - 1, d, h, mi, sec || 0);
+  }
+  const full = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})\s+(\d{1,2})[:h](\d{2})(?::(\d{2}))?$/);
+  if (full) {
+    const [, d, m, y, h, mi, sec] = full.map(Number);
+    return new Date(y, m - 1, d, h, mi, sec || 0);
+  }
+  const time = text.match(/^(\d{1,2})[:h](\d{2})?(?::(\d{2}))?$/i);
+  if (time) return atToday(Number(time[1]), Number(time[2] || 0), Number(time[3] || 0));
+  return null;
+}
+
+// Duração estimada → horas. Aceita "04:00:00", número de horas (4 / "4,5"), "4h30" ou [h,mi,s].
+function parsePriorityDurationHours(value) {
+  if (value == null || String(value).trim() === '') return null;
+  if (Array.isArray(value)) return (Number(value[0]) || 0) + (Number(value[1]) || 0) / 60 + (Number(value[2]) || 0) / 3600;
+  if (typeof value === 'number') return value > 0 ? value : null;
+  const text = String(value).trim();
+  const dt = text.match(/^Date\(\d+,\d+,\d+,(\d+),(\d+)(?:,(\d+))?\)$/);
+  if (dt) return Number(dt[1]) + Number(dt[2]) / 60 + Number(dt[3] || 0) / 3600;
+  const hm = text.match(/^(\d+)\s*[:h]\s*(\d{1,2})?(?::(\d{2}))?$/i);
+  if (hm) return Number(hm[1]) + Number(hm[2] || 0) / 60 + Number(hm[3] || 0) / 3600;
+  const n = Number(text.replace(',', '.'));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+// Turnos de trabalho (minutos desde a meia-noite): 08:00–13:00 e 14:00–17:15.
+const PRIORITY_SHIFTS = [[8 * 60, 13 * 60], [14 * 60, 17 * 60 + 15]];
+
+// Horas de turno decorridas entre `start` e `now`, só em dias úteis.
+function getPriorityShiftHours(start, now) {
+  if (!(start < now)) return 0;
+  const minutesOf = d => d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+  const firstDay = new Date(start); firstDay.setHours(0, 0, 0, 0);
+  const lastDay = new Date(now); lastDay.setHours(0, 0, 0, 0);
+  let minutes = 0;
+  for (const day = new Date(firstDay); day <= lastDay; day.setDate(day.getDate() + 1)) {
+    if (getWorkDaysCount(day, day, true, day.getFullYear()) !== 1) continue;
+    const from = day.getTime() === firstDay.getTime() ? minutesOf(start) : 0;
+    const to = day.getTime() === lastDay.getTime() ? minutesOf(now) : 24 * 60;
+    PRIORITY_SHIFTS.forEach(([a, b]) => {
+      minutes += Math.max(0, Math.min(to, b) - Math.max(from, a));
+    });
+  }
+  return minutes / 60;
+}
+
+// Duração dividida em 4 partes: cada parte de horas de turno decorrida soma 25%, até 75%.
+// Os últimos 25% só entram quando a % da prioridade na Sheet (AM2/AO2) = 100%.
+function computeTimedPriorityPct(info, now = new Date()) {
+  if (!info) return null;
+  if (info.donePct === 100) return 100;
+  const start = parsePriorityStart(info.start, now);
+  const hours = parsePriorityDurationHours(info.duration);
+  if (!start || !hours) return 0;
+  const parts = Math.floor(getPriorityShiftHours(start, now) / (hours / 4));
+  return Math.min(3, parts) * 25;
+}
+
 async function fetchPs1Summary() {
   const table = await fetchSecondaryTable('PS1');
   const row = table && Array.isArray(table.rows) ? table.rows[0] : null;
@@ -2752,12 +2850,33 @@ async function fetchPs1Summary() {
     return index >= 0 ? getValueFromRow(row, index) : null;
   };
   const prioridadeAtiva = readValue('Posto1', 'CO');
+  const timedKey = getTimedPriorityKey(prioridadeAtiva);
+  let timedInfo = null;
+  if (timedKey) {
+    const cols = TIMED_PRIORITIES[timedKey];
+    timedInfo = {
+      start: readValue(null, cols.start),
+      duration: readValue(null, cols.duration),
+      donePct: parseSheetPercentage(readValue(null, cols.done)),
+    };
+  }
   return {
     prioridadeAtiva,
-    prioridadeAtivaPct: getPs1ActivePriorityPercentage(table, row, prioridadeAtiva),
+    prioridadeAtivaPct: timedInfo
+      ? computeTimedPriorityPct(timedInfo)
+      : getPs1ActivePriorityPercentage(table, row, prioridadeAtiva),
+    timedInfo,
     geral: readValue('GERAL(T)', 'N'),
   };
 }
+
+// Último estado da prioridade 0,1/0,2, para atualizar a % com o passar do tempo
+// mesmo sem alterações na Sheet.
+let currentTimedPriority = null;
+setInterval(() => {
+  if (!currentTimedPriority) return;
+  updatePrioridadeEmCurso(currentTimedPriority.prioridade, computeTimedPriorityPct(currentTimedPriority.info));
+}, 30 * 1000);
 
 // Faixa "Prioridade em Curso": % de realização da prioridade ativa.
 // Fica escondida apenas quando não há prioridade ativa.
@@ -2774,7 +2893,7 @@ function updatePrioridadeEmCurso(prioridade, pct) {
 }
 
 function refreshPs1Fields() {
-  return fetchPs1Summary().then(({ prioridadeAtiva, prioridadeAtivaPct, geral }) => {
+  return fetchPs1Summary().then(({ prioridadeAtiva, prioridadeAtivaPct, timedInfo, geral }) => {
     const ativaBox = document.getElementById('prioridadeAtiva');
     const ativaValueEl = document.getElementById('prioridadeAtivaValue');
     const prioridade = prioridadeAtiva != null && String(prioridadeAtiva).trim() !== ''
@@ -2782,6 +2901,7 @@ function refreshPs1Fields() {
       : null;
     if (ativaValueEl) ativaValueEl.textContent = prioridade || '—';
     if (ativaBox) ativaBox.classList.toggle('is-empty', !prioridade);
+    currentTimedPriority = prioridade && timedInfo ? { prioridade, info: timedInfo } : null;
     updatePrioridadeEmCurso(prioridade, prioridadeAtivaPct);
 
     const geralPct = parseSheetPercentage(geral);
@@ -2797,6 +2917,7 @@ function refreshPs1Fields() {
     const ativaValueEl = document.getElementById('prioridadeAtivaValue');
     if (ativaValueEl) ativaValueEl.textContent = '—';
     if (ativaBox) ativaBox.classList.add('is-empty');
+    currentTimedPriority = null;
     updatePrioridadeEmCurso(null, null);
     updateEvolucao(0);
   });
