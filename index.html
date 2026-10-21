@@ -646,6 +646,22 @@ main {
   background: rgba(255,255,255,0.2);
   border-radius: 6px 6px 0 0;
 }
+.prazo-hours {
+  margin-top: clamp(8px, 1.1vh, 12px);
+}
+.prazo-hours[hidden] { display: none; }
+.prazo-hours-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.12);
+}
+.prazo-hours-bar {
+  width: 0;
+  height: 100%;
+  border-radius: 4px;
+  transition: width .6s ease;
+}
 
 /* DETALHES */
 .details-section {
@@ -994,6 +1010,11 @@ footer {
         </div>
         <div class="prazo-track">
           <div class="prazo-fill-bar" id="prazoBar"></div>
+        </div>
+        <div class="prazo-hours" id="prazoHours" hidden>
+          <div class="prazo-hours-track">
+            <div class="prazo-hours-bar" id="prazoHoursBar" role="progressbar" aria-label="Horas úteis decorridas"></div>
+          </div>
         </div>
       </div>
 
@@ -1470,6 +1491,90 @@ function getWorkDaysCount(startDate, endDate, includeStartDay = true, year = nul
   }
 
   return count;
+}
+
+function parseSheetTime(value) {
+  if (value == null || String(value).trim() === '') {
+    return null;
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value >= 0 && value < 1 ? value * 24 * 60 : null;
+  }
+
+  const text = String(value).trim();
+  const dateMatch = text.match(/^Date\(\d+,\d+,\d+(?:,(\d+),(\d+),(\d+))?\)$/);
+  const timeMatch = text.match(/(?:^|T)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  let hours;
+  let minutes;
+  let seconds;
+
+  if (dateMatch) {
+    hours = Number(dateMatch[1] || 0);
+    minutes = Number(dateMatch[2] || 0);
+    seconds = Number(dateMatch[3] || 0);
+  } else if (timeMatch) {
+    hours = Number(timeMatch[1]);
+    minutes = Number(timeMatch[2]);
+    seconds = Number(timeMatch[3] || 0);
+  } else {
+    return null;
+  }
+
+  if (hours > 23 || minutes > 59 || seconds > 59) {
+    return null;
+  }
+  return hours * 60 + minutes + seconds / 60;
+}
+
+function getShiftHoursBetween(startMinutes, endMinutes) {
+  const workPeriods = [[8 * 60, 12 * 60], [13 * 60, 17 * 60]];
+  return workPeriods.reduce((total, [periodStart, periodEnd]) => {
+    return total + Math.max(0, Math.min(endMinutes, periodEnd) - Math.max(startMinutes, periodStart));
+  }, 0) / 60;
+}
+
+function getDeadlineHours(startDate, dueDate, startTime, now = new Date()) {
+  const start = parseSheetDate(startDate);
+  const due = parseSheetDate(dueDate);
+  const startMinutes = parseSheetTime(startTime);
+  if (!start || !due || startMinutes == null) {
+    return null;
+  }
+
+  start.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+  if (due < start) {
+    return { elapsed: 0, total: 0 };
+  }
+
+  const currentTime = new Date(now);
+  const today = new Date(currentTime);
+  today.setHours(0, 0, 0, 0);
+  const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes() + currentTime.getSeconds() / 60;
+  let elapsed = 0;
+  let total = 0;
+
+  for (const day = new Date(start); day <= due; day.setDate(day.getDate() + 1)) {
+    if (getWorkDaysCount(day, day, true, start.getFullYear()) !== 1) {
+      continue;
+    }
+
+    const isStartDay = day.getTime() === start.getTime();
+    total += getShiftHoursBetween(isStartDay ? startMinutes : 0, 17 * 60);
+
+    if (day < today) {
+      elapsed += getShiftHoursBetween(isStartDay ? startMinutes : 0, 17 * 60);
+    } else if (day.getTime() === today.getTime()) {
+      elapsed += getShiftHoursBetween(isStartDay ? startMinutes : 0, nowMinutes);
+    }
+  }
+
+  return { elapsed: Math.min(elapsed, total), total };
+}
+
+function formatWorkHours(hours) {
+  return (Math.round(hours * 10) / 10).toLocaleString('pt-PT', { maximumFractionDigits: 1 });
 }
 
 /**
@@ -1950,6 +2055,9 @@ const DATA_PREVISTA_FALLBACK = dataPrevistaEl ? dataPrevistaEl.textContent.trim(
 const folgaEl = document.getElementById('folgaSpan');
 const prazoUsedEl = document.getElementById('prazoUsed');
 const prazoBarEl = document.getElementById('prazoBar');
+const prazoHoursEl = document.getElementById('prazoHours');
+const prazoHoursBarEl = document.getElementById('prazoHoursBar');
+let deadlineHoursInput = null;
 const prazoTotalEl = document.querySelector('.prazo-total');
 const statusEl = document.getElementById('statusLabel');
 const zg = document.getElementById('zonasGrid');
@@ -2340,7 +2448,39 @@ function renderZones(rowData) {
   applyActiveHighlight();
 }
 
-function updateDeadline(startValue, dueValue) {
+function renderDeadlineHours() {
+  const hoursInfo = deadlineHoursInput
+    ? getDeadlineHours(deadlineHoursInput.start, deadlineHoursInput.due, deadlineHoursInput.time)
+    : null;
+  const hasHours = Boolean(hoursInfo && hoursInfo.total > 0);
+
+  if (prazoHoursEl) {
+    prazoHoursEl.hidden = !hasHours;
+  }
+  if (!prazoHoursBarEl) {
+    return;
+  }
+  if (!hasHours) {
+    prazoHoursBarEl.style.width = '0%';
+    prazoHoursBarEl.setAttribute('aria-valuenow', '0');
+    prazoHoursBarEl.setAttribute('aria-valuemax', '0');
+    prazoHoursBarEl.setAttribute('aria-valuetext', 'Sem horas úteis disponíveis');
+    return;
+  }
+
+  const ratio = Math.min(1, hoursInfo.elapsed / hoursInfo.total);
+  const color = ratio >= .9 ? '#ff3b3b' : ratio >= .7 ? '#ffaa00' : '#00ff87';
+  prazoHoursBarEl.style.width = `${ratio * 100}%`;
+  prazoHoursBarEl.style.background = color;
+  prazoHoursBarEl.setAttribute('aria-valuemin', '0');
+  prazoHoursBarEl.setAttribute('aria-valuemax', String(hoursInfo.total));
+  prazoHoursBarEl.setAttribute('aria-valuenow', String(hoursInfo.elapsed));
+  prazoHoursBarEl.setAttribute('aria-valuetext', `${formatWorkHours(hoursInfo.elapsed)} de ${formatWorkHours(hoursInfo.total)} horas úteis`);
+}
+
+setInterval(renderDeadlineHours, 60 * 1000);
+
+function updateDeadline(startValue, dueValue, startTimeValue) {
   // Helper: limpa o bloco de prazo para o estado "sem dados"
   const clearDeadline = () => {
     const dash = '-';
@@ -2360,6 +2500,11 @@ function updateDeadline(startValue, dueValue) {
       prazoBarEl.style.width = '0%';
       prazoBarEl.style.background = 'rgba(255,255,255,0.15)';
     }
+    if (prazoHoursEl) {
+      prazoHoursEl.hidden = true;
+    }
+    deadlineHoursInput = null;
+    renderDeadlineHours();
     if (folgaEl) {
       folgaEl.textContent = '—';
       folgaEl.style.color = 'rgba(255,255,255,0.4)';
@@ -2396,6 +2541,8 @@ function updateDeadline(startValue, dueValue) {
     prazoBarEl.style.width = `${ratio * 100}%`;
     prazoBarEl.style.background = pc;
   }
+  deadlineHoursInput = { start: startValue, due: dueValue, time: startTimeValue };
+  renderDeadlineHours();
   if (folgaEl) {
     folgaEl.textContent = `${remaining} dias restantes`;
     folgaEl.style.color = remaining <= 1 ? '#ff3b3b' : remaining <= 3 ? '#ffaa00' : '#00ff87';
@@ -2517,10 +2664,11 @@ function refreshPs1Details() {
 
   return fetchSecondaryRowFields('PS1', {
     inicio: { header: 'INÍCIO SOLDADURA / ACABAMENTO', column: 'J' },
+    inicioHora: { column: 'DW' },
     previsto: { header: 'DATA PRETENDIDA', column: 'F' },
     modeloLote: { header: 'LOTE', column: 'D' },
     chaveProcura: { header: 'Chave de Procura', column: 'A' },
-  }).then(({ inicio, previsto, modeloLote, chaveProcura }) => {
+  }).then(({ inicio, inicioHora, previsto, modeloLote, chaveProcura }) => {
     const inicioFmt = inicio != null && String(inicio).trim() !== ''
       ? formatSheetDate(inicio) || DATE_PLACEHOLDER
       : DATE_PLACEHOLDER;
@@ -2529,7 +2677,7 @@ function refreshPs1Details() {
       : DATE_PLACEHOLDER;
     renderText(dataInicioEl, inicioFmt, DATE_PLACEHOLDER);
     renderText(dataPrevistaEl, previstoFmt, DATE_PLACEHOLDER);
-    updateDeadline(inicio, previsto);
+    updateDeadline(inicio, previsto, inicioHora);
 
     const { modelo, lote } = parseModeloLote(modeloLote);
     modelDataAvailable = Boolean(modelo);
