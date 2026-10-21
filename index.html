@@ -2565,7 +2565,7 @@ function renderSheetData(sheetRow) {
   if (!sheetRow) return;
 
   // Modelo, Lote e datas vêm do PS1 (refreshPs1Details)
-  // Evolução Global vem do PS1!AK (refreshPs1Fields)
+  // Evolução Global vem do PS1!N (refreshPs1Fields)
   // Países vêm de montagemEditável (refrescados pelo seu próprio watcher — ver loadAndRenderPaises)
   refreshPs1Details();
   refreshPs1Fields();
@@ -2605,7 +2605,7 @@ async function fetchPs1Summary() {
   return {
     prioridadeAtiva,
     prioridadeAtivaPct: getPs1ActivePriorityPercentage(table, row, prioridadeAtiva),
-    geral: readValue('GERAL', 'AK'),
+    geral: readValue('GERAL(T)', 'N'),
   };
 }
 
@@ -2635,9 +2635,9 @@ function refreshPs1Fields() {
 
     const geralPct = parseSheetPercentage(geral);
     if (geralPct == null) {
-      console.warn('[evolução] valor de GERAL (PS1!AK2) não parseável:', geral);
+      console.warn('[evolução] valor de GERAL(T) (PS1!N2) não parseável:', geral);
     } else {
-      console.log('[evolução] GERAL (PS1!AK2) =', geral, '→', geralPct, '%');
+      console.log('[evolução] GERAL(T) (PS1!N2) =', geral, '→', geralPct, '%');
     }
     updateEvolucao(geralPct != null ? geralPct : 0);
   }).catch(err => {
