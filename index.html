@@ -2744,11 +2744,14 @@ function getPs1ActivePriorityPercentage(table, row, activePriority) {
   return null;
 }
 
-// Prioridades 0,1 e 0,2: o progresso é calculado pelo tempo decorrido.
-// início = DX2/DY2, duração estimada = EX2/EY2, conclusão = AM2/AO2 (% da prioridade).
+// Prioridades com progresso calculado pelo tempo decorrido (horas de turno).
+// start = hora de início (T…, bloco FY:GX), duration = Tempo Previsto (TP…, bloco GY:HX), done = % da prioridade (100% fecha).
 const TIMED_PRIORITIES = {
-  '0.1': { start: 'DX', duration: 'EX', done: 'AM' },
-  '0.2': { start: 'DY', duration: 'EY', done: 'AO' },
+  '0.1': { start: 'FY', duration: 'GY', done: 'AM' },
+  '0.2': { start: 'FZ', duration: 'GZ', done: 'AO' },
+  '11.1': { start: 'GM', duration: 'HM', done: 'BO' },
+  '11.2': { start: 'GN', duration: 'HN', done: 'BQ' },
+  '11.3': { start: 'GO', duration: 'HO', done: 'BS' },
 };
 
 function getTimedPriorityKey(prioridade) {
