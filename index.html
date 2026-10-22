@@ -2774,20 +2774,39 @@ function getPs1ActivePriorityPercentage(table, row, activePriority) {
 }
 
 // Prioridades com progresso calculado pelo tempo decorrido (horas de turno).
-// start = hora de início (T…, bloco FY:GX), duration = Tempo Previsto (TP…, bloco GY:HX), done = % da prioridade (100% fecha).
+// Os inícios vêm de DX:EW; os tempos previstos, de EX:FW; done = % da prioridade (100% fecha).
 const TIMED_PRIORITIES = {
-  '0.1': { start: 'FY', duration: 'GY', done: 'AM' },
-  '0.2': { start: 'FZ', duration: 'GZ', done: 'AO' },
-  '11.1': { start: 'GM', duration: 'HM', done: 'BO' },
-  '11.2': { start: 'GN', duration: 'HN', done: 'BQ' },
-  '11.3': { start: 'GO', duration: 'HO', done: 'BS' },
+  '0.1': { done: 'AM' },
+  '0.2': { done: 'AO' },
+  '11.1': { done: 'BO' },
+  '11.2': { done: 'BQ' },
+  '11.3': { done: 'BS' },
 };
+
+const TIMED_PRIORITY_SUFFIXES = [
+  '0,1', '0,2', '0,3', '1', '2', '3', '4', '5', '6', '7.1', '7.2', '8', '9',
+  '10', '11,1', '11,2', '11,3', '12,1', '12,2', '12,3', '13,1', '13,2', '13,3',
+  '14', '15', '16',
+];
 
 function getTimedPriorityKey(prioridade) {
   const n = Number(String(prioridade == null ? '' : prioridade).trim().replace(',', '.'));
   if (!Number.isFinite(n)) return null;
   const key = n.toFixed(1);
   return TIMED_PRIORITIES[key] ? key : null;
+}
+
+function getTimedPriorityValue(table, priorityKey, prefix) {
+  const headerRow = table && table.rows && table.rows[0];
+  const valueRow = table && table.rows && table.rows[1];
+  if (!headerRow || !valueRow) return null;
+
+  const targetHeader = `${prefix}${priorityKey.replace('.', ',')}`;
+  const headerIndex = headerRow.c.findIndex(cell =>
+    String(cell && (cell.v != null ? cell.v : cell.f) || '').trim().toUpperCase() === targetHeader
+  );
+  const index = headerIndex >= 0 ? headerIndex : TIMED_PRIORITY_SUFFIXES.indexOf(priorityKey.replace('.', ','));
+  return index >= 0 ? getValueFromRow(valueRow, index) : null;
 }
 
 // Hora de início → Date. Formato normal: "2026/10/21 16:04:01". Aceita também "09:30:00", "Date(y,m,d,h,mi,s)",
@@ -2862,16 +2881,16 @@ function getPriorityShiftHours(start, now) {
   return minutes / 60;
 }
 
-// Duração dividida em 4 partes: cada parte de horas de turno decorrida soma 25%, até 75%.
-// Os últimos 25% só entram quando a % da prioridade na Sheet (AM2/AO2) = 100%.
+// Duração dividida em 6 partes: cada parte de horas de turno decorrida soma 1/6, até 5/6.
+// A última parte só entra quando a % da prioridade na Sheet (AM2/AO2) = 100%.
 function computeTimedPriorityPct(info, now = new Date()) {
   if (!info) return null;
   if (info.donePct === 100) return 100;
   const start = parsePriorityStart(info.start, now);
   const hours = parsePriorityDurationHours(info.duration);
   if (!start || !hours) return 0;
-  const parts = Math.floor(getPriorityShiftHours(start, now) / (hours / 4));
-  return Math.min(3, parts) * 25;
+  const parts = Math.floor(getPriorityShiftHours(start, now) / (hours / 6));
+  return Math.round(Math.min(5, parts) * (100 / 6) * 10) / 10;
 }
 
 async function fetchPs1Summary() {
@@ -2886,9 +2905,13 @@ async function fetchPs1Summary() {
   let timedInfo = null;
   if (timedKey) {
     const cols = TIMED_PRIORITIES[timedKey];
+    const [startTable, durationTable] = await Promise.all([
+      fetchSheetTable({ id: SHEET_CONFIG_DEFAULT.id, tab: 'PS1', range: 'DX1:EW2' }),
+      fetchSheetTable({ id: SHEET_CONFIG_DEFAULT.id, tab: 'PS1', range: 'EX1:FW2' }),
+    ]);
     timedInfo = {
-      start: readValue(null, cols.start),
-      duration: readValue(null, cols.duration),
+      start: getTimedPriorityValue(startTable, timedKey, 'T'),
+      duration: getTimedPriorityValue(durationTable, timedKey, 'TP'),
       donePct: parseSheetPercentage(readValue(null, cols.done)),
     };
   }
@@ -2920,7 +2943,7 @@ function updatePrioridadeEmCurso(prioridade, pct) {
   if (!visible) return;
   document.getElementById('prioCursoName').textContent = /^\d+(?:[.,]\d+)?$/.test(prioridade) ? `P${prioridade}` : prioridade;
   const percentage = pct == null ? 0 : Math.max(0, Math.min(100, pct));
-  document.getElementById('prioCursoPct').textContent = percentage;
+  document.getElementById('prioCursoPct').textContent = percentage.toFixed(1).replace('.', ',');
   document.getElementById('prioCursoBar').style.width = `${percentage}%`;
 }
 
