@@ -2089,10 +2089,10 @@ const ZONA_CONFIGS = [
       mode: 'row-headers',
       startColumn: 'AL',
       endColumn: 'CE',
-      ignoreLabels: ['%'],
+      // Pares [Posto | %]: mostra o cabeçalho do posto quando o % ao lado = 100%.
+      percentLabel: '%',
       hideHeader: true,
       gridLayout: { cols: 4, rows: 3, flow: 'column' },
-      matchValue: 1,
       limit: 12,
     },
   },
@@ -2263,6 +2263,35 @@ async function fetchZonaListValues(source) {
     const ignore = new Set((source.ignoreLabels || []).map(s => String(s).trim()));
     const firstRow = table.rows[0]; // linha 2 da Sheet (gviz com headers=1 desloca)
     const limit = Math.max(1, source.limit || 50);
+    const labelAt = (idx) => {
+      const col = table.cols[idx] || {};
+      return col.label != null && String(col.label).trim() !== ''
+        ? String(col.label).trim()
+        : String(col.id || '').trim();
+    };
+
+    // percentLabel: colunas em pares [Posto | %]. Mostra o cabeçalho do posto
+    // quando a célula da linha 2 na coluna "%" ao lado vale 100%.
+    if (source.percentLabel) {
+      const pctLabel = String(source.percentLabel).trim();
+      const isFull = (value) => {
+        if (value == null) return false;
+        if (typeof value === 'number') return value === 1 || value === 100;
+        const s = String(value).trim().replace(',', '.');
+        if (s === '') return false;
+        const num = s.endsWith('%') ? Number(s.slice(0, -1)) / 100 : Number(s);
+        return num === 1 || num === 100;
+      };
+      const values = [];
+      for (let i = startIdx + 1; i <= endIdx && i < table.cols.length && values.length < limit; i += 1) {
+        if (labelAt(i) !== pctLabel) continue;
+        if (!isFull(getValueFromRow(firstRow, i))) continue;
+        const label = labelAt(i - 1);
+        if (label === '' || label === pctLabel) continue;
+        values.push(label);
+      }
+      return values;
+    }
     // matchValue: se definido, só mostra colunas cuja célula da linha 2
     // tenha esse valor exacto.
     const matchValue = source.matchValue;
