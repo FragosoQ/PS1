@@ -2087,13 +2087,13 @@ const ZONA_CONFIGS = [
     listSource: {
       tab: 'PS1',
       mode: 'row-headers',
-      startColumn: 'AL',
-      endColumn: 'CE',
-      // Pares [Posto | %]: mostra o cabeçalho do posto quando o % ao lado = 100%.
-      percentLabel: '%',
+      startColumn: 'CU',
+      endColumn: 'DT',
+      matchValue: '1',
+      replaceDots: true,
       hideHeader: true,
       gridLayout: { cols: 4, rows: 3, flow: 'column' },
-      limit: 12,
+      limit: 26,
     },
   },
   { nome: 'Envolventes', tab: 'PS1', header: 'Envolventes', column: 'R' },
@@ -2314,7 +2314,7 @@ async function fetchZonaListValues(source) {
         : String(col.id || '').trim();
       if (rawLabel === '' || ignore.has(rawLabel)) continue;
 
-      values.push(rawLabel);
+      values.push(source.replaceDots ? rawLabel.replace(/\./g, '_') : rawLabel);
     }
     return values;
   }
