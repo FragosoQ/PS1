@@ -284,6 +284,19 @@ main {
   margin-bottom: clamp(4px, 0.8vh, 8px);
 }
 
+.posto-numero {
+  position: absolute;
+  top: clamp(10px, 1.5vh, 20px);
+  right: clamp(12px, 1.5vw, 20px);
+  z-index: 1;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(42px, 5.5vw, 92px);
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1;
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.45);
+}
+
 .id-lote {
   font-size: clamp(22px, 3.6vh, 46px);
   color: rgba(255,255,255,0.8);
@@ -889,6 +902,10 @@ footer {
     font-size: clamp(28px, 8vw, 46px);
   }
 
+  .posto-numero {
+    font-size: clamp(28px, 8vw, 46px);
+  }
+
   .id-cliente {
     font-size: clamp(18px, 5vw, 36px);
   }
@@ -975,6 +992,7 @@ footer {
 
       <!-- EVOLUÇÃO -->
       <div class="globe-section" style="flex-direction:column;gap:clamp(6px,1vh,10px);position:relative;">
+        <span class="posto-numero">1</span>
         <div class="h-priority h-priority-left" id="prioridadeAtiva" hidden>
           <span class="h-priority-label">Prioridade Ativa</span>
           <span class="h-priority-value" id="prioridadeAtivaValue">—</span>
